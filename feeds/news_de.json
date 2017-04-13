@@ -1,3 +1,6 @@
 [
-    "http://www.spiegel.de/schlagzeilen/index.rss"
+    "http://www.spiegel.de/schlagzeilen/index.rss",
+    "http://newsfeed.zeit.de/",
+    "http://www.faz.net/rss/aktuell/",
+    "https://www.heise.de/newsticker/heise.rdf"
 ]

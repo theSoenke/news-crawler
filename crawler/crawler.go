@@ -1,17 +1,23 @@
 package crawler
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
+	"net/url"
+	"os"
+	"path/filepath"
+
+	"fmt"
 
 	"github.com/mmcdole/gofeed"
 )
 
-// Article is a single feed item
-type Article struct {
-	Title     string
-	Content   string
-	URL       string
-	Published string
+type article struct {
+	Title     string `json:"title"`
+	Content   string `json:"content"`
+	URL       string `json:"url"`
+	Published string `json:"published"`
 }
 
 // Run a new crawler
@@ -20,17 +26,21 @@ func Run() {
 
 	if err != nil {
 		log.Fatal("Failed to import sources")
-		return
 	}
 
 	for _, url := range sources {
-		var articles []*Article
+		var articles []*article
 		articles, err = parse(url)
-		storeArticles(articles)
+		err = storeArticles(url, articles)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println(url)
 	}
 }
 
-func parse(url string) ([]*Article, error) {
+func parse(url string) ([]*article, error) {
 	feedParser := gofeed.NewParser()
 	feed, err := feedParser.ParseURL(url)
 
@@ -38,21 +48,36 @@ func parse(url string) ([]*Article, error) {
 		return nil, err
 	}
 
-	articles := make([]*Article, len(feed.Items))
+	articles := make([]*article, len(feed.Items))
 	for i, item := range feed.Items {
-		article := Article{
+		newArticle := article{
 			Title:     item.Title,
 			Content:   item.Description,
 			URL:       item.Link,
 			Published: item.Published,
 		}
 
-		articles[i] = &article
+		articles[i] = &newArticle
 	}
 
 	return articles, nil
 }
 
-func storeArticles(articles []*Article) {
-	// TODO
+func storeArticles(feedURL string, articles []*article) error {
+	jsonArticles, err := json.Marshal(articles)
+	if err != nil {
+		return err
+	}
+
+	path := filepath.Join(".", "out")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		os.Mkdir(path, os.ModePerm)
+	}
+
+	var domain *url.URL
+	domain, err = url.Parse(feedURL)
+
+	outFilePath := "out/" + domain.Host + ".json"
+	err = ioutil.WriteFile(outFilePath, jsonArticles, 0644)
+	return err
 }

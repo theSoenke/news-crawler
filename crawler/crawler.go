@@ -1,6 +1,8 @@
-package main
+package crawler
 
 import (
+	"log"
+
 	"github.com/mmcdole/gofeed"
 )
 
@@ -12,11 +14,25 @@ type Article struct {
 	Published string
 }
 
-// Parse a feed passed as a the URL
-func Parse(url string) ([]*Article, error) {
-	fp := gofeed.NewParser()
+// Run a new crawler
+func Run() {
+	sources, err := readSourcesFile("feeds/news_de.json")
 
-	feed, err := fp.ParseURL("http://feeds.twit.tv/twit.xml")
+	if err != nil {
+		log.Fatal("Failed to import sources")
+		return
+	}
+
+	for _, url := range sources {
+		var articles []*Article
+		articles, err = parse(url)
+		storeArticles(articles)
+	}
+}
+
+func parse(url string) ([]*Article, error) {
+	feedParser := gofeed.NewParser()
+	feed, err := feedParser.ParseURL(url)
 
 	if err != nil {
 		return nil, err
@@ -35,4 +51,8 @@ func Parse(url string) ([]*Article, error) {
 	}
 
 	return articles, nil
+}
+
+func storeArticles(articles []*Article) {
+	// TODO
 }

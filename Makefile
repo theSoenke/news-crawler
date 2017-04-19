@@ -13,3 +13,7 @@ vet:
 
 build:
 	@go get ${PACKAGES}
+
+run:
+	@go get ${PACKAGES}
+	@${GOPATH}/bin/news-crawler

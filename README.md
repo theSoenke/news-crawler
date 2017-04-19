@@ -10,5 +10,5 @@ make
 
 ## Run
 ```
-news-crawler
+make run
 ```

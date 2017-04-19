@@ -2,13 +2,12 @@ package crawler
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
 	"path/filepath"
-
-	"fmt"
 
 	"github.com/mmcdole/gofeed"
 )
@@ -31,7 +30,7 @@ func Run() {
 	for _, url := range sources {
 		var articles []*article
 		articles, err = parse(url)
-		err = storeArticles(url, articles)
+		err = save(url, articles)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -63,7 +62,7 @@ func parse(url string) ([]*article, error) {
 	return articles, nil
 }
 
-func storeArticles(feedURL string, articles []*article) error {
+func save(feedURL string, articles []*article) error {
 	jsonArticles, err := json.Marshal(articles)
 	if err != nil {
 		return err

@@ -10,8 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"fmt"
-
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -35,10 +33,7 @@ func saveItem(db *sql.DB, item *FeedItem) {
 	created := time.Now().Format("01-02-2006")
 	_, err = stmt.Exec(item.GUID, item.URL, created)
 	if err != nil {
-		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
-			fmt.Println(item.GUID)
-			fmt.Println(err.Error())
-		} else {
+		if !strings.Contains(err.Error(), "UNIQUE constraint failed") {
 			checkErr(err)
 		}
 	}

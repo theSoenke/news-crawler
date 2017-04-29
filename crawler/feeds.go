@@ -21,8 +21,18 @@ type FeedItem struct {
 	GUID      string `json:"guid"`
 }
 
-// Run a new crawler
-func Run(sources []string) ([]Feed, error) {
+// ScrapeFeeds download a list of provided feeds
+func ScrapeFeeds(sources []string) error {
+	feeds, err := fetch(sources)
+	if err != nil {
+		return err
+	}
+
+	err = save(feeds)
+	return err
+}
+
+func fetch(sources []string) ([]Feed, error) {
 	var feeds = make([]Feed, 0)
 	for _, url := range sources {
 		items, err := parse(url)
@@ -53,7 +63,7 @@ func parse(url string) ([]*FeedItem, error) {
 		var GUID = item.GUID
 
 		if GUID == "" {
-			return nil, fmt.Errorf("GUID is empty. Link: %s", item.Link)
+			GUID = item.Link
 		}
 		newItem := FeedItem{
 			Title:     item.Title,
@@ -67,4 +77,8 @@ func parse(url string) ([]*FeedItem, error) {
 	}
 
 	return items, nil
+}
+
+func save(feeds []Feed) error {
+	return nil
 }

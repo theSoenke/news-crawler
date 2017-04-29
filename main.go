@@ -2,24 +2,29 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"io/ioutil"
 	"log"
 
-	"github.com/thesoenke/news-crawler/feeds/crawler"
+	"github.com/thesoenke/news-crawler/crawler"
 )
 
 func main() {
-	sources, err := readSourcesFile("rss/news_de.json")
+	feedsPtr := flag.String("feeds", "", "Path to a JSON file with a list of feeds")
+	flag.Parse()
+	if *feedsPtr == "" {
+		log.Fatal("Please provide feed sources with --feeds")
+	}
+
+	sources, err := readSourcesFile(*feedsPtr)
 	if err != nil {
 		log.Fatal("Failed to import sources")
 	}
 
-	feeds, err := crawler.Run(sources)
+	err = crawler.ScrapeFeeds(sources)
 	if err != nil {
 		panic(err)
 	}
-	saveAsJSON(feeds)
-	saveInDB(feeds)
 }
 
 func saveAsJSON(feeds []crawler.Feed) {

@@ -2,14 +2,19 @@ package crawler
 
 import (
 	"fmt"
+	"time"
+
+	"encoding/json"
+
+	"io/ioutil"
 
 	"github.com/mmcdole/gofeed"
 )
 
 // Feed represent an RSS/Atom feed
 type Feed struct {
-	URL   string
-	Items []*FeedItem
+	URL   string      `json:"url"`
+	Items []*FeedItem `json:"items"`
 }
 
 // FeedItem stores info of feed entry
@@ -80,5 +85,12 @@ func parse(url string) ([]*FeedItem, error) {
 }
 
 func save(feeds []Feed) error {
-	return nil
+	// TODO update instead of overide file
+	day := time.Now().Format("2-1-2006")
+	filename := "out/" + day + ".json"
+	jsonFeeds, err := json.Marshal(feeds)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(filename, jsonFeeds, 0644)
 }

@@ -27,18 +27,6 @@ func main() {
 	}
 }
 
-func saveAsJSON(feeds []crawler.Feed) {
-	for _, feed := range feeds {
-		crawler.SaveFeed(feed)
-	}
-}
-
-func saveInDB(feeds []crawler.Feed) {
-	for _, feed := range feeds {
-		crawler.Save(feed.Items)
-	}
-}
-
 func readSourcesFile(path string) ([]string, error) {
 	sourceFile, err := ioutil.ReadFile(path)
 

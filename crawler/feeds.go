@@ -38,10 +38,11 @@ func ScrapeFeeds(sources []string, outDir string, timezone *time.Location) error
 
 func fetch(sources []string) ([]Feed, error) {
 	var feeds = make([]Feed, 0)
-	for _, url := range sources {
+	for i, url := range sources {
 		items, err := parse(url)
 		if err != nil {
-			return nil, err
+			fmt.Printf("Failed: %s\n", url)
+			continue
 		}
 
 		feed := Feed{
@@ -49,7 +50,7 @@ func fetch(sources []string) ([]Feed, error) {
 			Items: items,
 		}
 		feeds = append(feeds, feed)
-		fmt.Println(url)
+		fmt.Printf("%d: %s\n", i, url)
 	}
 	return feeds, nil
 }

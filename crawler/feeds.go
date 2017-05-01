@@ -26,13 +26,13 @@ type FeedItem struct {
 }
 
 // ScrapeFeeds download a list of provided feeds
-func ScrapeFeeds(sources []string) error {
+func ScrapeFeeds(sources []string, outDir string, timezone *time.Location) error {
 	feeds, err := fetch(sources)
 	if err != nil {
 		return err
 	}
 
-	err = save(feeds)
+	err = save(feeds, outDir, timezone)
 	return err
 }
 
@@ -81,11 +81,19 @@ func parse(url string) ([]*FeedItem, error) {
 	return items, nil
 }
 
-func save(feeds []Feed) error {
-	day := time.Now().Format("2-1-2006")
-	filename := "out/" + day + ".json"
-	if _, err := os.Stat(filename); !os.IsNotExist(err) {
-		feedsFile, err := ioutil.ReadFile(filename)
+func save(feeds []Feed, outDir string, location *time.Location) error {
+	if _, err := os.Stat(outDir); os.IsNotExist(err) {
+		err := os.MkdirAll(outDir, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	dayLocation := time.Now().In(location)
+	day := dayLocation.Format("2-1-2006")
+	feedFile := outDir + day + ".json"
+	if _, err := os.Stat(feedFile); !os.IsNotExist(err) {
+		feedsFile, err := ioutil.ReadFile(feedFile)
 		if err != nil {
 			return err
 		}
@@ -103,7 +111,7 @@ func save(feeds []Feed) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(filename, jsonFeeds, 0644)
+	return ioutil.WriteFile(feedFile, jsonFeeds, 0644)
 }
 
 func merge(newFeeds []Feed, oldFeeds []Feed) []Feed {

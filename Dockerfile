@@ -11,7 +11,6 @@ RUN go get
 RUN go build -o /usr/local/bin/news-crawler
 
 COPY feeds /feeds
-COPY feed-crawler /etc/periodic/15min/feed-crawler
+COPY run-crawler.sh /etc/periodic/15min/run-crawler.sh
 
-CMD ["/usr/local/bin/news-crawler --feeds /feeds/news_de.json"]
-# CMD crond -l 2 -f
+CMD crond -l 2 -f

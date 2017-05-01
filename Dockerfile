@@ -10,7 +10,7 @@ WORKDIR /go/src/github.com/thesoenke/news-crawler
 RUN go get
 RUN go build -o /usr/local/bin/news-crawler
 
-COPY feeds /feeds
-COPY run-crawler.sh /etc/periodic/15min/run-crawler.sh
+COPY feeds /app/feeds
+COPY scripts/feed-scraper.sh /etc/periodic/15min/feed-scraper
 
 CMD crond -l 2 -f

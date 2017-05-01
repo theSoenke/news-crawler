@@ -1,1 +1,0 @@
-/usr/local/bin/news-crawler --feeds /feeds/news_de.json --timezone Europe/Berlin --out /feeds/out

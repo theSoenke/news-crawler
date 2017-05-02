@@ -41,7 +41,7 @@ func fetch(sources []string) ([]Feed, error) {
 	for i, url := range sources {
 		items, err := parse(url)
 		if err != nil {
-			fmt.Printf("Failed: %s\n", url)
+			fmt.Printf("%d: Failed %s\n", i, url)
 			continue
 		}
 

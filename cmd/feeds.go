@@ -23,7 +23,7 @@ var cmdFeeds = &cobra.Command{
 			log.Fatal("Please provide a valid timezone with --timezone")
 		}
 
-		sources, err := readSourcesFile(feeds)
+		sources, err := extractFeedURLs(feeds)
 		if err != nil {
 			log.Fatal("Failed to import sources")
 		}
@@ -42,16 +42,14 @@ func init() {
 	RootCmd.AddCommand(cmdFeeds)
 }
 
-func readSourcesFile(path string) ([]string, error) {
+func extractFeedURLs(path string) ([]string, error) {
 	sourceFile, err := ioutil.ReadFile(path)
-
 	if err != nil {
 		return nil, err
 	}
 
 	var sources = make([]string, 0)
 	err = json.Unmarshal(sourceFile, &sources)
-
 	if err != nil {
 		return nil, err
 	}

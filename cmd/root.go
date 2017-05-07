@@ -13,7 +13,7 @@ var cfgFile string
 var RootCmd = &cobra.Command{
 	Use:   "news-crawler",
 	Short: "News article scraper",
-	Long:  `Allows to scrape content of daily news article`,
+	Long:  `Scraper to extract the content of daily news articles`,
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.

@@ -32,7 +32,12 @@ func ScrapeURLs(urls []string) error {
 			return err
 		}
 
-		fmt.Printf("%s\n", body)
+		content, err := extract(url, string(body))
+		if err != nil {
+			return err
+		}
+
+		fmt.Println(content)
 	}
 	return nil
 }

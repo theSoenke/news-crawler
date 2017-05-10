@@ -12,6 +12,6 @@ RUN go build -o /usr/local/bin/news-crawler
 
 COPY feeds /app/feeds
 COPY scripts/feed-scraper.sh /etc/periodic/15min/feed-scraper
-# COPY scripts/web-scraper.sh /etc/periodic/hourly/web-scraper
+COPY scripts/web-scraper.sh /etc/periodic/hourly/web-scraper
 
 CMD crond -l 2 -f

@@ -8,16 +8,43 @@ import (
 )
 
 func Run(url string) error {
-	pageHTML, err := retrieve(url)
+	feedDirectories := fetchFeedDirectories()
+	feeds, err := collectFeeds(feedDirectories)
 	if err != nil {
 		return err
 	}
 
-	extractFeeds(pageHTML)
+	fmt.Print(feeds)
 	return nil
 }
 
-func retrieve(url string) (string, error) {
+func fetchFeedDirectories() []string {
+	urls := make([]string, 0)
+
+	// http://www.rss-verzeichnis.net/
+	for i := 1; i < 50; i++ {
+		url := fmt.Sprintf("http://www.rss-verzeichnis.net/nachrichten-page%d.htm", i)
+		urls = append(urls, url)
+	}
+
+	return urls
+}
+
+func collectFeeds(directories []string) ([]string, error) {
+	feedURLs := make([]string, 0)
+	for _, url := range directories {
+		pageHTML, err := retrievePage(url)
+		if err != nil {
+			return nil, err
+		}
+		urls := extractFeeds(pageHTML)
+		feedURLs = append(feedURLs, urls...)
+	}
+
+	return feedURLs, nil
+}
+
+func retrievePage(url string) (string, error) {
 	rsp, err := http.Get(url)
 	if err != nil {
 		return "", err
@@ -36,9 +63,6 @@ func extractFeeds(html string) []string {
 	feedReg := regexp.MustCompile(`(https?://([-\w\.]+)+(:\d+)?(/([\w/_\.]*(\?\S+)?)?)?/(feed|rss))`)
 	feedLinks := feedReg.FindAllString(html, -1)
 	feedLinks = feedsUniq(feedLinks)
-	fmt.Println(feedLinks)
-
-	// TODO
 	return feedLinks
 }
 

@@ -1,20 +1,32 @@
 package sources
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"regexp"
 )
 
-func Run(url string) error {
+func Run() error {
 	feedDirectories := fetchFeedDirectories()
 	feeds, err := collectFeeds(feedDirectories)
 	if err != nil {
 		return err
 	}
 
-	fmt.Print(feeds)
+	fmt.Printf("Found %d feeds\n", len(feeds))
+
+	err = store(feeds)
+	return err
+}
+
+func store(feeds []string) error {
+	feedsJSON, err := json.Marshal(feeds)
+	if err != nil {
+		return err
+	}
+	ioutil.WriteFile("feeds.json", feedsJSON, 0644)
 	return nil
 }
 
@@ -60,7 +72,7 @@ func retrievePage(url string) (string, error) {
 }
 
 func extractFeeds(html string) []string {
-	feedReg := regexp.MustCompile(`(https?://([-\w\.]+)+(:\d+)?(/([\w/_\.]*(\?\S+)?)?)?/(feed|rss))`)
+	feedReg := regexp.MustCompile(`(https?://([-\w\.]+)+(:\d+)?(/([\w/_\.]*(\?\S+)?)?)?/(feed|rss)*)`)
 	feedLinks := feedReg.FindAllString(html, -1)
 	feedLinks = feedsUniq(feedLinks)
 	return feedLinks

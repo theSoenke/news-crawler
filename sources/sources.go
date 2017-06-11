@@ -34,7 +34,7 @@ func fetchFeedDirectories() []string {
 	urls := make([]string, 0)
 
 	// http://www.rss-verzeichnis.net/
-	for i := 1; i < 50; i++ {
+	for i := 1; i < 54; i++ {
 		url := fmt.Sprintf("http://www.rss-verzeichnis.net/nachrichten-page%d.htm", i)
 		urls = append(urls, url)
 	}
@@ -72,13 +72,19 @@ func retrievePage(url string) (string, error) {
 }
 
 func extractFeeds(html string) []string {
-	feedReg := regexp.MustCompile(`(https?://([-\w\.]+)+(:\d+)?(/([\w/_\.]*(\?\S+)?)?)?/(feed|rss)*)`)
-	feedLinks := feedReg.FindAllString(html, -1)
-	feedLinks = feedsUniq(feedLinks)
-	return feedLinks
+	feedReg := regexp.MustCompile(`
+		(https?:\/\/
+		([-\w\.]+)+(:\d+)?
+		(\/([\w\/_\.]*(\?\S+)?)?)?
+		(feed|rss)+
+		([\w\/_\.\-]*(\?\S+)?)?)`)
+	feeds := feedReg.FindAllString(html, -1)
+	feeds = uniq(feeds)
+
+	return feeds
 }
 
-func feedsUniq(s []string) []string {
+func uniq(s []string) []string {
 	seen := make(map[string]struct{}, len(s))
 	j := 0
 	for _, v := range s {

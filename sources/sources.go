@@ -53,6 +53,7 @@ func scrapeFeedURLs(urls []string) ([]string, error) {
 		feedURLs = append(feedURLs, urls...)
 	}
 
+	feedURLs = unique(feedURLs)
 	return feedURLs, nil
 }
 
@@ -74,19 +75,20 @@ func fetchURL(url string) (string, error) {
 func extractFeedURLs(html string) []string {
 	feedReg := regexp.MustCompile(`(https?:\/\/([-\w\.]+)+(:\d+)?(\/([\w\/_\.]*(\?\S+)?)?)?(feed|rss)+([\w\/_\.\-]*(\?\S+)?)?)`)
 	feeds := feedReg.FindAllString(html, -1)
-	return uniq(feeds)
+	return feeds
 }
 
-func uniq(s []string) []string {
-	seen := make(map[string]struct{}, len(s))
-	j := 0
-	for _, v := range s {
-		if _, ok := seen[v]; ok {
+func unique(s []string) []string {
+	uniq := make([]string, 0, len(s))
+	seen := make(map[string]bool)
+
+	for _, val := range s {
+		if _, ok := seen[val]; ok {
 			continue
 		}
-		seen[v] = struct{}{}
-		s[j] = v
-		j++
+		seen[val] = true
+		uniq = append(uniq, val)
 	}
-	return s[:j]
+
+	return uniq
 }

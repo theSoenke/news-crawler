@@ -9,8 +9,8 @@ import (
 )
 
 func Run() error {
-	feedDirectories := fetchFeedDirectories()
-	feeds, err := collectFeeds(feedDirectories)
+	urls := crawlFeedDirectories()
+	feeds, err := scrapeFeedURLs(urls)
 	if err != nil {
 		return err
 	}
@@ -30,7 +30,7 @@ func store(feeds []string) error {
 	return nil
 }
 
-func fetchFeedDirectories() []string {
+func crawlFeedDirectories() []string {
 	urls := make([]string, 0)
 
 	// http://www.rss-verzeichnis.net/
@@ -42,27 +42,27 @@ func fetchFeedDirectories() []string {
 	return urls
 }
 
-func collectFeeds(directories []string) ([]string, error) {
+func scrapeFeedURLs(urls []string) ([]string, error) {
 	feedURLs := make([]string, 0)
-	for _, url := range directories {
-		pageHTML, err := retrievePage(url)
+	for _, url := range urls {
+		pageHTML, err := fetchURL(url)
 		if err != nil {
 			return nil, err
 		}
-		urls := extractFeeds(pageHTML)
+		urls := extractFeedURLs(pageHTML)
 		feedURLs = append(feedURLs, urls...)
 	}
 
 	return feedURLs, nil
 }
 
-func retrievePage(url string) (string, error) {
+func fetchURL(url string) (string, error) {
 	rsp, err := http.Get(url)
 	if err != nil {
 		return "", err
 	}
-	defer rsp.Body.Close()
 
+	defer rsp.Body.Close()
 	html, err := ioutil.ReadAll(rsp.Body)
 	if err != nil {
 		return "", err
@@ -71,17 +71,10 @@ func retrievePage(url string) (string, error) {
 	return string(html), nil
 }
 
-func extractFeeds(html string) []string {
-	feedReg := regexp.MustCompile(`
-		(https?:\/\/
-		([-\w\.]+)+(:\d+)?
-		(\/([\w\/_\.]*(\?\S+)?)?)?
-		(feed|rss)+
-		([\w\/_\.\-]*(\?\S+)?)?)`)
+func extractFeedURLs(html string) []string {
+	feedReg := regexp.MustCompile(`(https?:\/\/([-\w\.]+)+(:\d+)?(\/([\w\/_\.]*(\?\S+)?)?)?(feed|rss)+([\w\/_\.\-]*(\?\S+)?)?)`)
 	feeds := feedReg.FindAllString(html, -1)
-	feeds = uniq(feeds)
-
-	return feeds
+	return uniq(feeds)
 }
 
 func uniq(s []string) []string {

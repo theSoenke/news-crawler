@@ -43,19 +43,26 @@ func (scraper *Scraper) Scrape() error {
 				return err
 			}
 
-			_, err = extractContent(feedItem.URL, page)
+			content, err := extractContent(feedItem.URL, page)
 			if err != nil {
 				return err
 			}
 
-			// err = Store(feedItem.URL, content)
-			// if err != nil {
-			// 	return err
-			// }
+			feedItem.Content = content
+			err = store(feedItem)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
-	log.Printf("Scraper finished in %d", time.Since(start))
+	log.Printf("Scraper finished in %s", time.Since(start))
+	return nil
+}
+
+func store(feedItem *feedreader.FeedItem) error {
+	fmt.Print(feedItem.Content)
+	// TODO store feed items
 	return nil
 }
 
@@ -95,13 +102,6 @@ func loadFeeds(path string) ([]feedreader.Feed, error) {
 	err = json.Unmarshal(articlesFile, &feeds)
 	if err != nil {
 		return nil, err
-	}
-
-	var urls []string
-	for _, feed := range feeds {
-		for _, feedItem := range feed.Items {
-			urls = append(urls, feedItem.URL)
-		}
 	}
 
 	return feeds, nil

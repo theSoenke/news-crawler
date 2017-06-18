@@ -20,17 +20,17 @@ var cmdFeeds = &cobra.Command{
 			return errors.New("Please provide a file with feeds")
 		}
 
-		location, err := time.LoadLocation(timezone)
-		if err != nil {
-			return err
-		}
-
 		reader, err := feedreader.New(feedsFile)
 		if err != nil {
 			return err
 		}
 
 		_, err = reader.Fetch()
+		if err != nil {
+			return err
+		}
+
+		location, err := time.LoadLocation(timezone)
 		if err != nil {
 			return err
 		}

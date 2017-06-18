@@ -50,8 +50,9 @@ func (feedReader *FeedReader) Fetch() ([]Feed, error) {
 
 	for i, url := range feedReader.Sources {
 		items, err := fetchFeed(url)
+
 		if err != nil {
-			fmt.Printf("%d: Failed %s\n", i, url)
+			fmt.Printf("%d: Failed %s %s\n", i, url, err)
 			continue
 		}
 
@@ -63,7 +64,7 @@ func (feedReader *FeedReader) Fetch() ([]Feed, error) {
 		fmt.Printf("%d: %s\n", i, url)
 	}
 
-	log.Printf("Feedreader finished in %d", time.Since(start))
+	log.Printf("Feedreader finished in %s", time.Since(start))
 	return feeds, nil
 }
 
@@ -78,7 +79,7 @@ func (feedReader *FeedReader) Store(outDir string, location *time.Location) erro
 	dayLocation := time.Now().In(location)
 	day := dayLocation.Format("2-1-2006")
 	feedFile := outDir + day + ".json"
-	feeds := make([]Feed, 0)
+	feeds := feedReader.Feeds
 	if _, err := os.Stat(feedFile); !os.IsNotExist(err) {
 		feedsFile, err := ioutil.ReadFile(feedFile)
 		if err != nil {
@@ -98,7 +99,9 @@ func (feedReader *FeedReader) Store(outDir string, location *time.Location) erro
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(feedFile, jsonFeeds, 0644)
+
+	err = ioutil.WriteFile(feedFile, jsonFeeds, 0644)
+	return err
 }
 
 func fetchFeed(url string) ([]*FeedItem, error) {
@@ -199,7 +202,7 @@ func (item *FeedItem) validate() error {
 	}
 
 	if item.Published == "" {
-		return fmt.Errorf("Feed item contains no published date: %s", item.URL)
+		item.Published = time.Now().String()
 	}
 
 	return nil

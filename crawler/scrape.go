@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 const (
@@ -13,7 +14,10 @@ const (
 // ScrapeURLs downloads the content of the provide list of urls
 func ScrapeURLs(urls []string) error {
 	for _, url := range urls {
-		client := http.Client{}
+		timeout := time.Duration(30 * time.Second)
+		client := http.Client{
+			Timeout: timeout,
+		}
 		req, err := http.NewRequest("GET", url, nil)
 		req.Header.Set("User-Agent", userAgent)
 		resp, err := client.Do(req)

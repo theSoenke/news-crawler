@@ -1,10 +1,12 @@
 package cmd
 
 import (
-	"encoding/json"
+	"bufio"
 	"errors"
-	"io/ioutil"
+	"os"
 	"time"
+
+	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/thesoenke/news-crawler/crawler"
@@ -27,12 +29,14 @@ var cmdFeeds = &cobra.Command{
 			return err
 		}
 
-		sources, err := extractFeedURLs(feedsFile)
+		feeds, err := loadFeeds(feedsFile)
 		if err != nil {
 			return err
 		}
 
-		err = crawler.ScrapeFeeds(sources, outDir, location)
+		fmt.Print(feeds)
+
+		err = crawler.ScrapeFeeds(feeds, outDir, location)
 		if err != nil {
 			return err
 		}
@@ -48,17 +52,23 @@ func init() {
 	RootCmd.AddCommand(cmdFeeds)
 }
 
-func extractFeedURLs(path string) ([]string, error) {
-	sourceFile, err := ioutil.ReadFile(path)
+func loadFeeds(path string) ([]string, error) {
+	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 
-	var sources = make([]string, 0)
-	err = json.Unmarshal(sourceFile, &sources)
-	if err != nil {
+	defer file.Close()
+
+	feeds := make([]string, 0)
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		feeds = append(feeds, scanner.Text())
+	}
+
+	if err = scanner.Err(); err != nil {
 		return nil, err
 	}
 
-	return sources, nil
+	return feeds, nil
 }

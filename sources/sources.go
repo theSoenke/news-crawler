@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"time"
 )
 
 func Run() error {
@@ -15,8 +16,8 @@ func Run() error {
 		return err
 	}
 
+	feeds = validateFeeds(feeds)
 	fmt.Printf("Found %d feeds\n", len(feeds))
-
 	err = store(feeds)
 	return err
 }
@@ -76,6 +77,33 @@ func extractFeedURLs(html string) []string {
 	feedReg := regexp.MustCompile(`(https?:\/\/([-\w\.]+)+(:\d+)?(\/([\w\/_\.]*(\?\S+)?)?)?(feed|rss)+([\w\/_\.\-]*(\?\S+)?)?)`)
 	feeds := feedReg.FindAllString(html, -1)
 	return feeds
+}
+
+func validateFeeds(feeds []string) []string {
+	validFeeds := make([]string, 0)
+
+	for _, feed := range feeds {
+		timeout := time.Duration(30 * time.Second)
+		client := http.Client{
+			Timeout: timeout,
+		}
+		req, err := http.NewRequest("GET", feed, nil)
+		resp, err := client.Do(req)
+		if err != nil {
+			continue
+		}
+
+		defer resp.Body.Close()
+
+		if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
+			continue
+		}
+
+		validFeeds = append(validFeeds, feed)
+		fmt.Printf("Validated feed %s", feed)
+	}
+
+	return validFeeds
 }
 
 func unique(s []string) []string {

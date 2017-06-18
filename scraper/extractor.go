@@ -1,10 +1,10 @@
-package crawler
+package scraper
 
 import (
 	"github.com/advancedlogic/GoOse"
 )
 
-func extract(url string, html string) (string, error) {
+func extractContent(url string, html string) (string, error) {
 	g := goose.New()
 	article, err := g.ExtractFromRawHTML(url, html)
 	if err != nil {

@@ -1,15 +1,11 @@
 package cmd
 
 import (
-	"bufio"
 	"errors"
-	"os"
 	"time"
 
-	"fmt"
-
 	"github.com/spf13/cobra"
-	"github.com/thesoenke/news-crawler/crawler"
+	"github.com/thesoenke/news-crawler/feedreader"
 )
 
 var feedsFile string
@@ -29,14 +25,17 @@ var cmdFeeds = &cobra.Command{
 			return err
 		}
 
-		feeds, err := loadFeeds(feedsFile)
+		reader, err := feedreader.New(feedsFile)
 		if err != nil {
 			return err
 		}
 
-		fmt.Print(feeds)
+		_, err = reader.Fetch()
+		if err != nil {
+			return err
+		}
 
-		err = crawler.ScrapeFeeds(feeds, outDir, location)
+		err = reader.Store(outDir, location)
 		if err != nil {
 			return err
 		}
@@ -50,25 +49,4 @@ func init() {
 	cmdFeeds.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
 	cmdFeeds.PersistentFlags().StringVarP(&outDir, "out", "o", "out/", "Directory where to store the feed items")
 	RootCmd.AddCommand(cmdFeeds)
-}
-
-func loadFeeds(path string) ([]string, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-
-	defer file.Close()
-
-	feeds := make([]string, 0)
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		feeds = append(feeds, scanner.Text())
-	}
-
-	if err = scanner.Err(); err != nil {
-		return nil, err
-	}
-
-	return feeds, nil
 }

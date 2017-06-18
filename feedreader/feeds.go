@@ -1,6 +1,7 @@
-package crawler
+package feedreader
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -25,21 +26,27 @@ type FeedItem struct {
 	GUID      string `json:"guid"`
 }
 
-// ScrapeFeeds download a list of provided feeds
-func ScrapeFeeds(sources []string, outDir string, timezone *time.Location) error {
-	feeds, err := fetch(sources)
-	if err != nil {
-		return err
-	}
-
-	err = save(feeds, outDir, timezone)
-	return err
+type FeedReader struct {
+	Sources []string
+	Feeds   []Feed
 }
 
-func fetch(sources []string) ([]Feed, error) {
+// New creates a feedreader
+func New(feedsFile string) (FeedReader, error) {
+	feedreader := FeedReader{}
+	feeds, err := loadFeeds(feedsFile)
+	if err != nil {
+		return feedreader, err
+	}
+
+	feedreader.Sources = feeds
+	return feedreader, nil
+}
+
+func (feedReader *FeedReader) Fetch() ([]Feed, error) {
 	var feeds = make([]Feed, 0)
-	for i, url := range sources {
-		items, err := parse(url)
+	for i, url := range feedReader.Sources {
+		items, err := fetchFeed(url)
 		if err != nil {
 			fmt.Printf("%d: Failed %s\n", i, url)
 			continue
@@ -52,10 +59,45 @@ func fetch(sources []string) ([]Feed, error) {
 		feeds = append(feeds, feed)
 		fmt.Printf("%d: %s\n", i, url)
 	}
+
 	return feeds, nil
 }
 
-func parse(url string) ([]*FeedItem, error) {
+func (feedReader *FeedReader) Store(outDir string, location *time.Location) error {
+	if _, err := os.Stat(outDir); os.IsNotExist(err) {
+		err := os.MkdirAll(outDir, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	dayLocation := time.Now().In(location)
+	day := dayLocation.Format("2-1-2006")
+	feedFile := outDir + day + ".json"
+	feeds := make([]Feed, 0)
+	if _, err := os.Stat(feedFile); !os.IsNotExist(err) {
+		feedsFile, err := ioutil.ReadFile(feedFile)
+		if err != nil {
+			return err
+		}
+
+		var oldFeeds []Feed
+		err = json.Unmarshal(feedsFile, &oldFeeds)
+		if err != nil {
+			return err
+		}
+
+		feeds = merge(feeds, oldFeeds)
+	}
+
+	jsonFeeds, err := json.Marshal(feeds)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(feedFile, jsonFeeds, 0644)
+}
+
+func fetchFeed(url string) ([]*FeedItem, error) {
 	feedParser := gofeed.NewParser()
 	feed, err := feedParser.ParseURL(url)
 	if err != nil {
@@ -82,37 +124,25 @@ func parse(url string) ([]*FeedItem, error) {
 	return items, nil
 }
 
-func save(feeds []Feed, outDir string, location *time.Location) error {
-	if _, err := os.Stat(outDir); os.IsNotExist(err) {
-		err := os.MkdirAll(outDir, os.ModePerm)
-		if err != nil {
-			return err
-		}
-	}
-
-	dayLocation := time.Now().In(location)
-	day := dayLocation.Format("2-1-2006")
-	feedFile := outDir + day + ".json"
-	if _, err := os.Stat(feedFile); !os.IsNotExist(err) {
-		feedsFile, err := ioutil.ReadFile(feedFile)
-		if err != nil {
-			return err
-		}
-
-		var oldFeeds []Feed
-		err = json.Unmarshal(feedsFile, &oldFeeds)
-		if err != nil {
-			return err
-		}
-
-		feeds = merge(feeds, oldFeeds)
-	}
-
-	jsonFeeds, err := json.Marshal(feeds)
+func loadFeeds(path string) ([]string, error) {
+	file, err := os.Open(path)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return ioutil.WriteFile(feedFile, jsonFeeds, 0644)
+
+	defer file.Close()
+
+	feeds := make([]string, 0)
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		feeds = append(feeds, scanner.Text())
+	}
+
+	if err = scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return feeds, nil
 }
 
 func merge(newFeeds []Feed, oldFeeds []Feed) []Feed {

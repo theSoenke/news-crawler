@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"log"
+
 	"github.com/thesoenke/news-crawler/feedreader"
 )
 
@@ -30,8 +32,10 @@ func New(feedsFile string) (Scraper, error) {
 	return scraper, nil
 }
 
-// ScrapeURLs downloads the content of the provide list of urls
+// Scrape downloads the content of the provide list of urls
 func (scraper *Scraper) Scrape() error {
+	start := time.Now()
+
 	for _, feed := range scraper.Feeds {
 		for _, feedItem := range feed.Items {
 			page, err := fetchPage(feedItem.URL)
@@ -51,6 +55,7 @@ func (scraper *Scraper) Scrape() error {
 		}
 	}
 
+	log.Printf("Scraper finished in %d", time.Since(start))
 	return nil
 }
 

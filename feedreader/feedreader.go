@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"time"
 
@@ -44,7 +45,9 @@ func New(feedsFile string) (FeedReader, error) {
 }
 
 func (feedReader *FeedReader) Fetch() ([]Feed, error) {
-	var feeds = make([]Feed, 0)
+	start := time.Now()
+	feeds := make([]Feed, 0)
+
 	for i, url := range feedReader.Sources {
 		items, err := fetchFeed(url)
 		if err != nil {
@@ -60,6 +63,7 @@ func (feedReader *FeedReader) Fetch() ([]Feed, error) {
 		fmt.Printf("%d: %s\n", i, url)
 	}
 
+	log.Printf("Feedreader finished in %d", time.Since(start))
 	return feeds, nil
 }
 

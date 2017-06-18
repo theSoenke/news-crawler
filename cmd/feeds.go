@@ -45,7 +45,7 @@ var cmdFeeds = &cobra.Command{
 }
 
 func init() {
-	cmdFeeds.PersistentFlags().StringVarP(&feedsFile, "feeds", "f", "feeds/news_de.json", "Path to a JSON file with feeds")
+	cmdFeeds.PersistentFlags().StringVarP(&feedsFile, "feeds", "f", "feeds/feeds_de.txt", "Path to a file with feeds")
 	cmdFeeds.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
 	cmdFeeds.PersistentFlags().StringVarP(&outDir, "out", "o", "out/", "Directory where to store the feed items")
 	RootCmd.AddCommand(cmdFeeds)

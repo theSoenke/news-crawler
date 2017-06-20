@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"log"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -25,10 +26,12 @@ var cmdFeeds = &cobra.Command{
 			return err
 		}
 
+		start := time.Now()
 		_, err = reader.Fetch()
 		if err != nil {
 			return err
 		}
+		log.Printf("Feedreader finished in %s", time.Since(start))
 
 		location, err := time.LoadLocation(timezone)
 		if err != nil {

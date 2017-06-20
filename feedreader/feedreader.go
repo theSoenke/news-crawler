@@ -43,10 +43,10 @@ func New(feedsFile string) (FeedReader, error) {
 	return feedreader, nil
 }
 
-func (feedReader *FeedReader) Fetch() ([]Feed, error) {
+func (fr *FeedReader) Fetch() error {
 	feeds := make([]Feed, 0)
 
-	for i, url := range feedReader.Sources {
+	for i, url := range fr.Sources {
 		items, err := fetchFeed(url)
 
 		if err != nil {
@@ -62,10 +62,11 @@ func (feedReader *FeedReader) Fetch() ([]Feed, error) {
 		fmt.Printf("%d: %s\n", i, url)
 	}
 
-	return feeds, nil
+	fr.Feeds = feeds
+	return nil
 }
 
-func (feedReader *FeedReader) Store(outDir string, location *time.Location) error {
+func (fr *FeedReader) Store(outDir string, location *time.Location) error {
 	if _, err := os.Stat(outDir); os.IsNotExist(err) {
 		err := os.MkdirAll(outDir, os.ModePerm)
 		if err != nil {
@@ -76,7 +77,7 @@ func (feedReader *FeedReader) Store(outDir string, location *time.Location) erro
 	dayLocation := time.Now().In(location)
 	day := dayLocation.Format("2-1-2006")
 	feedFile := outDir + day + ".json"
-	feeds := feedReader.Feeds
+	feeds := fr.Feeds
 	if _, err := os.Stat(feedFile); !os.IsNotExist(err) {
 		feedsFile, err := ioutil.ReadFile(feedFile)
 		if err != nil {

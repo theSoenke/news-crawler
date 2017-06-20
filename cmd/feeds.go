@@ -27,7 +27,7 @@ var cmdFeeds = &cobra.Command{
 		}
 
 		start := time.Now()
-		_, err = reader.Fetch()
+		err = reader.Fetch()
 		if err != nil {
 			return err
 		}

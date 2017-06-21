@@ -25,7 +25,7 @@ func New(feedsFile string) (Scraper, error) {
 
 	feeds, err := loadFeeds(feedsFile)
 	if err != nil {
-		return scraper, nil
+		return scraper, err
 	}
 
 	scraper.Feeds = feeds
@@ -76,7 +76,7 @@ func (scraper *Scraper) Store(outDir string, location *time.Location) error {
 
 	dayLocation := time.Now().In(location)
 	day := dayLocation.Format("2-1-2006")
-	contentFile := outDir + "content-" + day + ".json"
+	contentFile := outDir + day + ".json"
 	err = ioutil.WriteFile(contentFile, feedsJSON, 0644)
 	if err != nil {
 		return err

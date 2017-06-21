@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"errors"
+	"log"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/thesoenke/news-crawler/scraper"
@@ -22,7 +24,18 @@ var cmdScrape = &cobra.Command{
 			return err
 		}
 
-		contentScraper.Scrape()
+		start := time.Now()
+		err = contentScraper.Scrape()
+		if err != nil {
+			return err
+		}
+
+		articles := 0
+		for _, feed := range contentScraper.Feeds {
+			articles += len(feed.Items)
+		}
+		log.Printf("Scraper downloaded %d articles in %s", articles, time.Since(start))
+
 		return nil
 	},
 }

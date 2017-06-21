@@ -7,9 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"log"
-
 	"github.com/thesoenke/news-crawler/feedreader"
+	"gopkg.in/cheggaaa/pb.v1"
 )
 
 const (
@@ -34,7 +33,11 @@ func New(feedsFile string) (Scraper, error) {
 
 // Scrape downloads the content of the provide list of urls
 func (scraper *Scraper) Scrape() error {
-	start := time.Now()
+	items := 0
+	for _, feed := range scraper.Feeds {
+		items += len(feed.Items)
+	}
+	bar := pb.StartNew(items)
 
 	for _, feed := range scraper.Feeds {
 		for _, feedItem := range feed.Items {
@@ -49,20 +52,26 @@ func (scraper *Scraper) Scrape() error {
 			}
 
 			feedItem.Content = content
-			err = store(feedItem)
-			if err != nil {
-				return err
-			}
+			bar.Increment()
 		}
 	}
 
-	log.Printf("Scraper finished in %s", time.Since(start))
+	bar.Finish()
+	store(scraper.Feeds)
+
 	return nil
 }
 
-func store(feedItem *feedreader.FeedItem) error {
-	fmt.Print(feedItem.Content)
-	// TODO store feed items
+func store(feeds []feedreader.Feed) error {
+	feedsJSON, err := json.Marshal(feeds)
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile("content.json", feedsJSON, 0644)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

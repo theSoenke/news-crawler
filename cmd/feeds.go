@@ -31,7 +31,12 @@ var cmdFeeds = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		log.Printf("Feedreader finished in %s", time.Since(start))
+
+		items := 0
+		for _, feed := range reader.Feeds {
+			items += len(feed.Items)
+		}
+		log.Printf("Feedreader downloaded %d feeds with %d items in %s", len(reader.Feeds), items, time.Since(start))
 
 		location, err := time.LoadLocation(timezone)
 		if err != nil {

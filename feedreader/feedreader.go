@@ -45,12 +45,13 @@ func New(feedsFile string) (FeedReader, error) {
 
 func (fr *FeedReader) Fetch() error {
 	feeds := make([]Feed, 0)
+	count := len(fr.Sources)
 
 	for i, url := range fr.Sources {
 		items, err := fetchFeed(url)
 
 		if err != nil {
-			fmt.Printf("%d: Failed %s %s\n", i, url, err)
+			fmt.Printf("%d/%d: Failed %s %s\n", i, count, url, err)
 			continue
 		}
 
@@ -59,7 +60,7 @@ func (fr *FeedReader) Fetch() error {
 			Items: items,
 		}
 		feeds = append(feeds, feed)
-		fmt.Printf("%d: %s\n", i, url)
+		fmt.Printf("%d/%d: %s\n", i, count, url)
 	}
 
 	fr.Feeds = feeds

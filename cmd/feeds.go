@@ -36,7 +36,7 @@ var cmdFeeds = &cobra.Command{
 		for _, feed := range reader.Feeds {
 			items += len(feed.Items)
 		}
-		log.Printf("Feedreader downloaded %d feeds with %d items in %s", len(reader.Feeds), items, time.Since(start))
+		log.Printf("Downloaded %d feeds with %d items in %s", len(reader.Feeds), items, time.Since(start))
 
 		location, err := time.LoadLocation(timezone)
 		if err != nil {
@@ -53,7 +53,7 @@ var cmdFeeds = &cobra.Command{
 }
 
 func init() {
-	cmdFeeds.PersistentFlags().StringVarP(&feedsFile, "feeds", "f", "feeds/feeds_de.txt", "Path to a file with feeds")
+	cmdFeeds.PersistentFlags().StringVarP(&feedsFile, "file", "f", "feeds/feeds_de.txt", "Path to a file with feeds")
 	cmdFeeds.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
 	cmdFeeds.PersistentFlags().StringVarP(&outDir, "out", "o", "out/", "Directory where to store the feed items")
 	RootCmd.AddCommand(cmdFeeds)

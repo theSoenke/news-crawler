@@ -41,7 +41,7 @@ var cmdScrape = &cobra.Command{
 }
 
 func init() {
-	cmdScrape.PersistentFlags().StringVarP(&feedListFile, "articles", "a", "", "Path to a JSON file with feed items")
+	cmdScrape.PersistentFlags().StringVarP(&feedListFile, "file", "f", "", "Path to a JSON file with feed items")
 	cmdScrape.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
 	cmdScrape.PersistentFlags().StringVarP(&outDir, "out", "o", "out/", "Directory where to store the articles")
 	RootCmd.AddCommand(cmdScrape)

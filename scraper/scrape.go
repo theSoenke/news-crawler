@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/thesoenke/news-crawler/feedreader"
@@ -40,38 +41,47 @@ func (scraper *Scraper) Scrape() error {
 	bar := pb.StartNew(items)
 
 	for _, feed := range scraper.Feeds {
-		for _, feedItem := range feed.Items {
-			page, err := fetchPage(feedItem.URL)
+		for _, item := range feed.Items {
+			page, err := fetchPage(item.URL)
 			if err != nil {
 				return err
 			}
 
-			content, err := extractContent(feedItem.URL, page)
+			content, err := extractContent(item.URL, page)
 			if err != nil {
 				return err
 			}
 
-			feedItem.Content = content
+			item.Content = content
 			bar.Increment()
 		}
 	}
 
 	bar.Finish()
-	store(scraper.Feeds)
-
 	return nil
 }
 
-func store(feeds []feedreader.Feed) error {
-	feedsJSON, err := json.Marshal(feeds)
+func (scraper *Scraper) Store(outDir string, location *time.Location) error {
+	if _, err := os.Stat(outDir); os.IsNotExist(err) {
+		err := os.MkdirAll(outDir, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	feedsJSON, err := json.Marshal(scraper.Feeds)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile("content.json", feedsJSON, 0644)
+	dayLocation := time.Now().In(location)
+	day := dayLocation.Format("2-1-2006")
+	contentFile := outDir + "content-" + day + ".json"
+	err = ioutil.WriteFile(contentFile, feedsJSON, 0644)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 

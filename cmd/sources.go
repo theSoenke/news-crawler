@@ -19,6 +19,5 @@ var cmdSources = &cobra.Command{
 }
 
 func init() {
-	cmdSources.PersistentFlags().StringVarP(&feedsFile, "sources", "s", "", "")
 	RootCmd.AddCommand(cmdSources)
 }

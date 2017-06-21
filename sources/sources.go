@@ -100,7 +100,6 @@ func validateFeeds(feeds []string) []string {
 		}
 
 		validFeeds = append(validFeeds, feed)
-		fmt.Printf("Validated feed %s", feed)
 	}
 
 	return validFeeds

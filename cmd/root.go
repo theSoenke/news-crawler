@@ -7,7 +7,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var cfgFile string
+var inputFile string
+var timezone string
+var outDir string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{

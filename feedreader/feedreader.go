@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/mmcdole/gofeed"
+	"gopkg.in/cheggaaa/pb.v1"
 )
 
 // Feed represent an RSS/Atom feed
@@ -44,13 +45,15 @@ func New(feedsFile string) (FeedReader, error) {
 }
 
 func (fr *FeedReader) Fetch() error {
-	feeds := make([]Feed, 0)
 	ch := make(chan *Feed)
 	failed := make(chan error)
+	count := len(fr.Sources)
+	bar := pb.StartNew(count)
 
 	for _, url := range fr.Sources {
 		go func(url string) {
 			items, err := fetchFeed(url)
+			bar.Increment()
 
 			if err != nil {
 				failed <- fmt.Errorf("Failed %s %s\n", url, err)
@@ -65,7 +68,7 @@ func (fr *FeedReader) Fetch() error {
 		}(url)
 	}
 
-	count := len(fr.Sources)
+	feeds := make([]Feed, 0)
 	for i := 0; i < count; i++ {
 		select {
 		case feed := <-ch:
@@ -74,6 +77,7 @@ func (fr *FeedReader) Fetch() error {
 			// TODO handle failed feeds
 		}
 	}
+	bar.Finish()
 
 	fr.Feeds = feeds
 	return nil

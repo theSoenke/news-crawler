@@ -34,6 +34,8 @@ func New(feedsFile string) (Scraper, error) {
 
 // Scrape downloads the content of the provide list of urls
 func (scraper *Scraper) Scrape() error {
+	concurrencyLimit := 500
+	rateLimitChan := make(chan struct{}, concurrencyLimit)
 	items := 0
 	for _, feed := range scraper.Feeds {
 		items += len(feed.Items)
@@ -42,22 +44,45 @@ func (scraper *Scraper) Scrape() error {
 
 	for _, feed := range scraper.Feeds {
 		for _, item := range feed.Items {
-			page, err := fetchPage(item.URL)
-			if err != nil {
-				return err
-			}
+			rateLimitChan <- struct{}{}
 
-			content, err := extractContent(item.URL, page)
-			if err != nil {
-				return err
-			}
+			go func(item *feedreader.FeedItem) {
+				defer func() {
+					<-rateLimitChan
+				}()
 
-			item.Content = content
-			bar.Increment()
+				err := fetchItem(item)
+				bar.Increment()
+				if err != nil {
+					return
+				}
+			}(item)
 		}
 	}
 
+	// make sure all goroutines have finished
+	for i := 0; i < cap(rateLimitChan); i++ {
+		rateLimitChan <- struct{}{}
+	}
 	bar.Finish()
+
+	return nil
+}
+
+func fetchItem(item *feedreader.FeedItem) error {
+	_, err := fetchPage(item.URL)
+	if err != nil {
+		return err
+	}
+
+	// content, err := extractContent(item.URL, page)
+	// if err != nil {
+	// 	failed <- err
+	// 	return
+	// }
+
+	// item.Content = content
+
 	return nil
 }
 

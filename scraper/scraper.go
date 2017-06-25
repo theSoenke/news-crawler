@@ -6,7 +6,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"sync"
 	"time"
+
+	"log"
 
 	"github.com/thesoenke/news-crawler/feedreader"
 	"gopkg.in/cheggaaa/pb.v1"
@@ -33,55 +36,59 @@ func New(feedsFile string) (Scraper, error) {
 }
 
 // Scrape downloads the content of the provide list of urls
-func (scraper *Scraper) Scrape() error {
+func (scraper *Scraper) Scrape() {
 	concurrencyLimit := 500
-	rateLimitChan := make(chan struct{}, concurrencyLimit)
+	wg := sync.WaitGroup{}
+	queue := make(chan *feedreader.FeedItem)
+
 	items := 0
 	for _, feed := range scraper.Feeds {
 		items += len(feed.Items)
 	}
 	bar := pb.StartNew(items)
 
-	for _, feed := range scraper.Feeds {
-		for _, item := range feed.Items {
-			rateLimitChan <- struct{}{}
+	// prevents "Unsolicited response" log messages from http package when encountering buggy webserver
+	log.SetOutput(ioutil.Discard)
 
-			go func(item *feedreader.FeedItem) {
-				defer func() {
-					<-rateLimitChan
-				}()
+	for worker := 0; worker < concurrencyLimit; worker++ {
+		wg.Add(1)
 
+		go func(worker int) {
+			defer wg.Done()
+
+			for item := range queue {
 				err := fetchItem(item)
 				bar.Increment()
 				if err != nil {
-					return
 				}
-			}(item)
+			}
+		}(worker)
+	}
+
+	for _, feed := range scraper.Feeds {
+		for _, item := range feed.Items {
+			queue <- item
 		}
 	}
 
-	// make sure all goroutines have finished
-	for i := 0; i < cap(rateLimitChan); i++ {
-		rateLimitChan <- struct{}{}
-	}
+	close(queue)
+	wg.Wait()
 	bar.Finish()
-
-	return nil
+	log.SetOutput(os.Stderr)
 }
 
 func fetchItem(item *feedreader.FeedItem) error {
-	_, err := fetchPage(item.URL)
+	page, err := fetchPage(item.URL)
 	if err != nil {
 		return err
 	}
 
-	// content, err := extractContent(item.URL, page)
-	// if err != nil {
-	// 	failed <- err
-	// 	return
-	// }
+	content, err := extractContent(item.URL, page)
+	if err != nil {
+		return err
+	}
 
-	// item.Content = content
+	item.Content = content
 
 	return nil
 }
@@ -111,7 +118,7 @@ func (scraper *Scraper) Store(outDir string, location *time.Location) error {
 }
 
 func fetchPage(url string) (string, error) {
-	timeout := time.Duration(30 * time.Second)
+	timeout := time.Duration(20 * time.Second)
 	client := http.Client{
 		Timeout: timeout,
 	}
@@ -125,7 +132,7 @@ func fetchPage(url string) (string, error) {
 	defer resp.Body.Close()
 
 	if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
-		return "", fmt.Errorf("Site retuned status code %d", resp.StatusCode)
+		return "", fmt.Errorf("Site returned status code %d", resp.StatusCode)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)

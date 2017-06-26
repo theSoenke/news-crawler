@@ -40,6 +40,8 @@ func (scraper *Scraper) Scrape() {
 	concurrencyLimit := 500
 	wg := sync.WaitGroup{}
 	queue := make(chan *feedreader.FeedItem)
+	errChan := make(chan error)
+	doneChan := make(chan bool)
 
 	items := 0
 	for _, feed := range scraper.Feeds {
@@ -60,14 +62,29 @@ func (scraper *Scraper) Scrape() {
 				err := fetchItem(item)
 				bar.Increment()
 				if err != nil {
+					errChan <- err
+				} else {
+					doneChan <- true
 				}
 			}
 		}(worker)
 	}
 
-	for _, feed := range scraper.Feeds {
-		for _, item := range feed.Items {
-			queue <- item
+	go func(feeds []feedreader.Feed) {
+		for _, feed := range feeds {
+			for _, item := range feed.Items {
+				queue <- item
+			}
+		}
+	}(scraper.Feeds)
+
+	failures := 0
+	for i := 0; i < items; i++ {
+		select {
+		case <-doneChan:
+		case <-errChan:
+			// TODO handle failed feeds
+			failures++
 		}
 	}
 
@@ -75,6 +92,7 @@ func (scraper *Scraper) Scrape() {
 	wg.Wait()
 	bar.Finish()
 	log.SetOutput(os.Stderr)
+	fmt.Printf("Failed to download %d articles\n", failures)
 }
 
 func fetchItem(item *feedreader.FeedItem) error {
@@ -118,7 +136,7 @@ func (scraper *Scraper) Store(outDir string, location *time.Location) error {
 }
 
 func fetchPage(url string) (string, error) {
-	timeout := time.Duration(20 * time.Second)
+	timeout := time.Duration(60 * time.Second)
 	client := http.Client{
 		Timeout: timeout,
 	}

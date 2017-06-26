@@ -55,7 +55,7 @@ func (scraper *Scraper) Scrape() {
 	for worker := 0; worker < concurrencyLimit; worker++ {
 		wg.Add(1)
 
-		go func(worker int) {
+		go func() {
 			defer wg.Done()
 
 			for item := range queue {
@@ -67,7 +67,7 @@ func (scraper *Scraper) Scrape() {
 					doneChan <- true
 				}
 			}
-		}(worker)
+		}()
 	}
 
 	go func(feeds []feedreader.Feed) {

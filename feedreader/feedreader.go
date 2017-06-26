@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/mmcdole/gofeed"
@@ -45,41 +46,57 @@ func New(feedsFile string) (FeedReader, error) {
 }
 
 func (fr *FeedReader) Fetch() error {
-	ch := make(chan *Feed)
-	failed := make(chan error)
+	concurrencyLimit := 200
+	wg := sync.WaitGroup{}
+	queue := make(chan string)
+	errChan := make(chan error)
+	feedChan := make(chan *Feed)
 	count := len(fr.Sources)
 	bar := pb.StartNew(count)
 
-	for _, url := range fr.Sources {
-		go func(url string) {
-			items, err := fetchFeed(url)
-			bar.Increment()
+	for worker := 0; worker < concurrencyLimit; worker++ {
+		wg.Add(1)
 
-			if err != nil {
-				failed <- fmt.Errorf("Failed %s %s\n", url, err)
-				return
-			}
+		go func() {
+			defer wg.Done()
 
-			feed := Feed{
-				URL:   url,
-				Items: items,
+			for url := range queue {
+				items, err := fetchFeed(url)
+				bar.Increment()
+				if err != nil {
+					errChan <- err
+				} else {
+					feed := Feed{
+						URL:   url,
+						Items: items,
+					}
+					feedChan <- &feed
+				}
 			}
-			ch <- &feed
-		}(url)
+		}()
 	}
 
+	go func(feeds []string) {
+		for _, url := range feeds {
+			queue <- url
+		}
+	}(fr.Sources)
+
+	failures := 0
 	feeds := make([]Feed, 0)
 	for i := 0; i < count; i++ {
 		select {
-		case feed := <-ch:
+		case feed := <-feedChan:
 			feeds = append(feeds, *feed)
-		case <-failed:
+		case <-errChan:
 			// TODO handle failed feeds
+			failures++
 		}
 	}
 	bar.Finish()
-
+	fmt.Printf("Failed to fetch %d feeds\n", failures)
 	fr.Feeds = feeds
+
 	return nil
 }
 
@@ -94,7 +111,6 @@ func (fr *FeedReader) Store(outDir string, location *time.Location) error {
 	dayLocation := time.Now().In(location)
 	day := dayLocation.Format("2-1-2006")
 	feedFile := outDir + day + ".json"
-	fmt.Println(feedFile)
 	feeds := fr.Feeds
 	if _, err := os.Stat(feedFile); !os.IsNotExist(err) {
 		feedsFile, err := ioutil.ReadFile(feedFile)

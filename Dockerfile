@@ -1,7 +1,7 @@
-FROM golang:1.8.1-alpine
+FROM golang:1.8.3-alpine
 
 RUN apk update && apk upgrade
-RUN apk add git gcc libc-dev
+RUN apk add git
 
 RUN mkdir -p /go/src/github.com/thesoenke/news-crawler
 COPY . /go/src/github.com/thesoenke/news-crawler

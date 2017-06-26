@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -110,7 +111,7 @@ func (fr *FeedReader) Store(outDir string, location *time.Location) error {
 
 	dayLocation := time.Now().In(location)
 	day := dayLocation.Format("2-1-2006")
-	feedFile := outDir + day + ".json"
+	feedFile := filepath.Join(outDir, day+".json")
 	feeds := fr.Feeds
 	if _, err := os.Stat(feedFile); !os.IsNotExist(err) {
 		feedsFile, err := ioutil.ReadFile(feedFile)

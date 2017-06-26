@@ -94,7 +94,7 @@ func (fr *FeedReader) Fetch() error {
 		}
 	}
 	bar.Finish()
-	fmt.Printf("Failed to fetch %d feeds\n", failures)
+	fmt.Printf("Feeds failed: %d\n", failures)
 	fr.Feeds = feeds
 
 	return nil

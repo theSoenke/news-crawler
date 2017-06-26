@@ -14,4 +14,4 @@ COPY data /app/data
 COPY scripts/feed-scraper.sh /etc/periodic/15min/feed-scraper
 COPY scripts/web-scraper.sh /etc/periodic/hourly/web-scraper
 
-CMD crond -l 2 -f
+CMD crond -l 5 -f

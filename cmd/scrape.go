@@ -3,6 +3,8 @@ package cmd
 import (
 	"errors"
 	"log"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -20,6 +22,21 @@ var cmdScrape = &cobra.Command{
 			return errors.New("Please provide a file with articles")
 		}
 
+		location, err := time.LoadLocation(timezone)
+		if err != nil {
+			return err
+		}
+
+		stat, err := os.Stat(itemsInputFile)
+		if err != nil {
+			return err
+		}
+		// Append current day to path when only received directory as input location
+		if stat.IsDir() {
+			dayLocation := time.Now().In(location)
+			day := dayLocation.Format("2-1-2006")
+			itemsInputFile = filepath.Join(itemsInputFile, day+".json")
+		}
 		contentScraper, err := scraper.New(itemsInputFile)
 		if err != nil {
 			return err
@@ -32,11 +49,6 @@ var cmdScrape = &cobra.Command{
 			articles += len(feed.Items)
 		}
 		log.Printf("Scraper downloaded %d articles in %s", articles, time.Since(start))
-
-		location, err := time.LoadLocation(timezone)
-		if err != nil {
-			return err
-		}
 
 		err = contentScraper.Store(contentOutDir, location)
 		if err != nil {

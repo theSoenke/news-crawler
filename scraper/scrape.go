@@ -4,12 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
+	"log"
 	"os"
 	"sync"
-	"time"
-
-	"log"
 
 	"github.com/thesoenke/news-crawler/feedreader"
 	"gopkg.in/cheggaaa/pb.v1"
@@ -21,6 +18,11 @@ const (
 
 type Scraper struct {
 	Feeds []feedreader.Feed
+}
+
+type Article struct {
+	FeedItem *feedreader.FeedItem
+	HTML     string
 }
 
 func New(feedsFile string) (Scraper, error) {
@@ -41,7 +43,7 @@ func (scraper *Scraper) Scrape() {
 	wg := sync.WaitGroup{}
 	queue := make(chan *feedreader.FeedItem)
 	errChan := make(chan error)
-	doneChan := make(chan bool)
+	ch := make(chan *Article)
 
 	items := 0
 	for _, feed := range scraper.Feeds {
@@ -59,13 +61,23 @@ func (scraper *Scraper) Scrape() {
 			defer wg.Done()
 
 			for item := range queue {
-				err := fetchItem(item)
-				bar.Increment()
+				article := &Article{
+					FeedItem: item,
+				}
+
+				err := article.Fetch()
 				if err != nil {
 					errChan <- err
-				} else {
-					doneChan <- true
+					continue
 				}
+
+				err = article.Extract()
+				if err != nil {
+					errChan <- err
+					continue
+				}
+
+				ch <- article
 			}
 		}()
 	}
@@ -78,87 +90,23 @@ func (scraper *Scraper) Scrape() {
 		}
 	}(scraper.Feeds)
 
-	failures := 0
+	articles := make([]*Article, 0)
+	errors := make([]error, 0)
 	for i := 0; i < items; i++ {
 		select {
-		case <-doneChan:
-		case <-errChan:
-			// TODO handle failed feeds
-			failures++
+		case article := <-ch:
+			articles = append(articles, article)
+		case err := <-errChan:
+			errors = append(errors, err)
 		}
+		bar.Increment()
 	}
 
 	close(queue)
 	wg.Wait()
 	bar.Finish()
 	log.SetOutput(os.Stderr)
-	fmt.Printf("Failed to download %d articles\n", failures)
-}
-
-func fetchItem(item *feedreader.FeedItem) error {
-	page, err := fetchPage(item.URL)
-	if err != nil {
-		return err
-	}
-
-	content, err := extractContent(item.URL, page)
-	if err != nil {
-		return err
-	}
-
-	item.Content = content
-
-	return nil
-}
-
-func (scraper *Scraper) Store(outDir string, location *time.Location) error {
-	if _, err := os.Stat(outDir); os.IsNotExist(err) {
-		err := os.MkdirAll(outDir, os.ModePerm)
-		if err != nil {
-			return err
-		}
-	}
-
-	feedsJSON, err := json.Marshal(scraper.Feeds)
-	if err != nil {
-		return err
-	}
-
-	dayLocation := time.Now().In(location)
-	day := dayLocation.Format("2-1-2006")
-	contentFile := outDir + day + ".json"
-	err = ioutil.WriteFile(contentFile, feedsJSON, 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func fetchPage(url string) (string, error) {
-	timeout := time.Duration(60 * time.Second)
-	client := http.Client{
-		Timeout: timeout,
-	}
-	req, err := http.NewRequest("GET", url, nil)
-	req.Header.Set("User-Agent", userAgent)
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", err
-	}
-
-	defer resp.Body.Close()
-
-	if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
-		return "", fmt.Errorf("Site returned status code %d", resp.StatusCode)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	return string(body), nil
+	fmt.Printf("Failed to download %d articles\n", len(errors))
 }
 
 func loadFeeds(path string) ([]feedreader.Feed, error) {

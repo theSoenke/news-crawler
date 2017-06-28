@@ -33,6 +33,7 @@ var cmdScrape = &cobra.Command{
 		}
 		// Append current day to path when only received directory as input location
 		if stat.IsDir() {
+			// TODO check whether file for today exists
 			dayLocation := time.Now().In(location)
 			day := dayLocation.Format("2-1-2006")
 			itemsInputFile = filepath.Join(itemsInputFile, day+".json")

@@ -17,12 +17,14 @@ const (
 )
 
 type Scraper struct {
-	Feeds []feedreader.Feed
+	Feeds    []feedreader.Feed
+	Articles []*Article
 }
 
 type Article struct {
 	FeedItem *feedreader.FeedItem
 	HTML     string
+	Content  string
 }
 
 func New(feedsFile string) (Scraper, error) {
@@ -105,6 +107,8 @@ func (scraper *Scraper) Scrape() {
 	close(queue)
 	wg.Wait()
 	bar.Finish()
+
+	scraper.Articles = articles
 	log.SetOutput(os.Stderr)
 	fmt.Printf("Failed to download %d articles\n", len(errors))
 }

@@ -15,6 +15,7 @@ func (scraper *Scraper) Store(outDir string, location *time.Location) error {
 		}
 	}
 
+	// TODO support storage of articles
 	feedsJSON, err := json.Marshal(scraper.Feeds)
 	if err != nil {
 		return err

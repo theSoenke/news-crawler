@@ -49,7 +49,7 @@ func (article *Article) Extract() error {
 		return err
 	}
 
-	article.FeedItem.Content = content
+	article.Content = content
 
 	return nil
 }

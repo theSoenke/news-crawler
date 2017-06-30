@@ -2,11 +2,9 @@ package feedreader
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"log"
 	"os"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -30,8 +28,9 @@ type FeedItem struct {
 }
 
 type FeedReader struct {
-	Sources []string
-	Feeds   []Feed
+	Sources  []string
+	Feeds    []Feed
+	Failures []string
 }
 
 // New creates a feedreader
@@ -43,14 +42,15 @@ func New(feedsFile string) (FeedReader, error) {
 	}
 
 	feedreader.Sources = feeds
+
 	return feedreader, nil
 }
 
-func (fr *FeedReader) Fetch() error {
+func (fr *FeedReader) Fetch(verbose bool) error {
 	concurrencyLimit := 200
 	wg := sync.WaitGroup{}
 	queue := make(chan string)
-	errChan := make(chan error)
+	errURLChan := make(chan string)
 	feedChan := make(chan *Feed)
 	count := len(fr.Sources)
 	bar := pb.StartNew(count)
@@ -58,23 +58,26 @@ func (fr *FeedReader) Fetch() error {
 	for worker := 0; worker < concurrencyLimit; worker++ {
 		wg.Add(1)
 
-		go func() {
+		go func(verbose bool) {
 			defer wg.Done()
 
 			for url := range queue {
 				items, err := fetchFeed(url)
-				bar.Increment()
 				if err != nil {
-					errChan <- err
-				} else {
-					feed := Feed{
-						URL:   url,
-						Items: items,
+					if verbose {
+						log.Printf("Failed to fetch feed %s %s", url, err)
 					}
-					feedChan <- &feed
+					errURLChan <- url
+					continue
 				}
+
+				feed := Feed{
+					URL:   url,
+					Items: items,
+				}
+				feedChan <- &feed
 			}
-		}()
+		}(verbose)
 	}
 
 	go func(feeds []string) {
@@ -83,58 +86,23 @@ func (fr *FeedReader) Fetch() error {
 		}
 	}(fr.Sources)
 
-	failures := 0
 	feeds := make([]Feed, 0)
+	failed := make([]string, 0)
 	for i := 0; i < count; i++ {
 		select {
 		case feed := <-feedChan:
 			feeds = append(feeds, *feed)
-		case <-errChan:
-			// TODO handle failed feeds
-			failures++
+		case url := <-errURLChan:
+			failed = append(failed, url)
 		}
+		bar.Increment()
 	}
 	bar.Finish()
-	fmt.Printf("Feeds failed: %d\n", failures)
+
 	fr.Feeds = feeds
+	fr.Failures = failed
 
 	return nil
-}
-
-func (fr *FeedReader) Store(outDir string, location *time.Location) error {
-	if _, err := os.Stat(outDir); os.IsNotExist(err) {
-		err := os.MkdirAll(outDir, os.ModePerm)
-		if err != nil {
-			return err
-		}
-	}
-
-	dayLocation := time.Now().In(location)
-	day := dayLocation.Format("2-1-2006")
-	feedFile := filepath.Join(outDir, day+".json")
-	feeds := fr.Feeds
-	if _, err := os.Stat(feedFile); !os.IsNotExist(err) {
-		feedsFile, err := ioutil.ReadFile(feedFile)
-		if err != nil {
-			return err
-		}
-
-		var oldFeeds []Feed
-		err = json.Unmarshal(feedsFile, &oldFeeds)
-		if err != nil {
-			return err
-		}
-
-		feeds = merge(feeds, oldFeeds)
-	}
-
-	jsonFeeds, err := json.Marshal(feeds)
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(feedFile, jsonFeeds, 0644)
-	return err
 }
 
 func fetchFeed(url string) ([]*FeedItem, error) {
@@ -161,6 +129,7 @@ func fetchFeed(url string) ([]*FeedItem, error) {
 
 		items[i] = &newItem
 	}
+
 	return items, nil
 }
 

@@ -11,6 +11,7 @@ import (
 
 var feedInputFile string
 var feedOutDir string
+var feedsVerbose bool
 
 var cmdFeeds = &cobra.Command{
 	Use:   "feeds",
@@ -26,7 +27,7 @@ var cmdFeeds = &cobra.Command{
 		}
 
 		start := time.Now()
-		err = reader.Fetch()
+		err = reader.Fetch(feedsVerbose)
 		if err != nil {
 			return err
 		}
@@ -35,7 +36,7 @@ var cmdFeeds = &cobra.Command{
 		for _, feed := range reader.Feeds {
 			items += len(feed.Items)
 		}
-		log.Printf("Downloaded %d feeds with %d items in %s", len(reader.Feeds), items, time.Since(start))
+		log.Printf("Successful: %d Failures: %d Items: %d Time: %s", len(reader.Feeds), len(reader.Failures), items, time.Since(start))
 
 		location, err := time.LoadLocation(timezone)
 		if err != nil {
@@ -55,5 +56,6 @@ func init() {
 	cmdFeeds.PersistentFlags().StringVarP(&feedInputFile, "file", "f", "feeds/feeds_de.txt", "Path to a file with feeds")
 	cmdFeeds.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
 	cmdFeeds.PersistentFlags().StringVarP(&feedOutDir, "out", "o", "out/feeds/", "Directory where to store the feed items")
+	cmdFeeds.PersistentFlags().BoolVarP(&feedsVerbose, "verbose", "v", false, "Output more detailed logging")
 	RootCmd.AddCommand(cmdFeeds)
 }

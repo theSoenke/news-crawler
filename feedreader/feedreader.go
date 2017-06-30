@@ -28,9 +28,9 @@ type FeedItem struct {
 }
 
 type FeedReader struct {
-	Sources  []string
-	Feeds    []Feed
-	Failures []string
+	Sources    []string
+	Feeds      []Feed
+	FailedURLs []string
 }
 
 // New creates a feedreader
@@ -100,7 +100,7 @@ func (fr *FeedReader) Fetch(verbose bool) error {
 	bar.Finish()
 
 	fr.Feeds = feeds
-	fr.Failures = failed
+	fr.FailedURLs = failed
 
 	return nil
 }

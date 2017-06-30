@@ -50,7 +50,7 @@ var cmdScrape = &cobra.Command{
 		for _, feed := range contentScraper.Feeds {
 			articles += len(feed.Items)
 		}
-		log.Printf("Scraper downloaded %d articles in %s", articles, time.Since(start))
+		log.Printf("Successful: %d Failed: %d Time: %s", articles, contentScraper.Failures, time.Since(start))
 
 		err = contentScraper.Store(contentOutDir, location)
 		if err != nil {

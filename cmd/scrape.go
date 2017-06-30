@@ -13,6 +13,7 @@ import (
 
 var itemsInputFile string
 var contentOutDir string
+var scrapeVerbose bool
 
 var cmdScrape = &cobra.Command{
 	Use:   "scrape",
@@ -44,7 +45,7 @@ var cmdScrape = &cobra.Command{
 		}
 
 		start := time.Now()
-		contentScraper.Scrape()
+		contentScraper.Scrape(scrapeVerbose)
 		articles := 0
 		for _, feed := range contentScraper.Feeds {
 			articles += len(feed.Items)
@@ -64,5 +65,6 @@ func init() {
 	cmdScrape.PersistentFlags().StringVarP(&itemsInputFile, "file", "f", "", "Path to a JSON file with feed items")
 	cmdScrape.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
 	cmdScrape.PersistentFlags().StringVarP(&contentOutDir, "out", "o", "out/content/", "Directory where to store the articles")
+	cmdScrape.PersistentFlags().BoolVarP(&scrapeVerbose, "verbose", "v", false, "Verbose logging of scraper")
 	RootCmd.AddCommand(cmdScrape)
 }

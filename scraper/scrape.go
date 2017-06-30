@@ -2,11 +2,12 @@ package scraper
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"sync"
+
+	"fmt"
 
 	"github.com/thesoenke/news-crawler/feedreader"
 	"gopkg.in/cheggaaa/pb.v1"
@@ -19,6 +20,7 @@ const (
 type Scraper struct {
 	Feeds    []feedreader.Feed
 	Articles []*Article
+	Failures int
 }
 
 type Article struct {
@@ -36,15 +38,16 @@ func New(feedsFile string) (Scraper, error) {
 	}
 
 	scraper.Feeds = feeds
+
 	return scraper, nil
 }
 
 // Scrape downloads the content of the provide list of urls
-func (scraper *Scraper) Scrape() {
+func (scraper *Scraper) Scrape(verbose bool) {
 	concurrencyLimit := 500
 	wg := sync.WaitGroup{}
 	queue := make(chan *feedreader.FeedItem)
-	errChan := make(chan error)
+	errChan := make(chan bool)
 	ch := make(chan *Article)
 
 	items := 0
@@ -59,7 +62,7 @@ func (scraper *Scraper) Scrape() {
 	for worker := 0; worker < concurrencyLimit; worker++ {
 		wg.Add(1)
 
-		go func() {
+		go func(verbose bool) {
 			defer wg.Done()
 
 			for item := range queue {
@@ -69,19 +72,25 @@ func (scraper *Scraper) Scrape() {
 
 				err := article.Fetch()
 				if err != nil {
-					errChan <- err
+					if verbose {
+						fmt.Printf("Failed to fetch %s %s\n", item.URL, err)
+					}
+					errChan <- true
 					continue
 				}
 
 				err = article.Extract()
 				if err != nil {
-					errChan <- err
+					if verbose {
+						fmt.Printf("Failed to extract %s %s\n", item.URL, err)
+					}
+					errChan <- true
 					continue
 				}
 
 				ch <- article
 			}
-		}()
+		}(verbose)
 	}
 
 	go func(feeds []feedreader.Feed) {
@@ -93,13 +102,13 @@ func (scraper *Scraper) Scrape() {
 	}(scraper.Feeds)
 
 	articles := make([]*Article, 0)
-	errors := make([]error, 0)
+	failures := 0
 	for i := 0; i < items; i++ {
 		select {
 		case article := <-ch:
 			articles = append(articles, article)
-		case err := <-errChan:
-			errors = append(errors, err)
+		case <-errChan:
+			failures++
 		}
 		bar.Increment()
 	}
@@ -107,10 +116,10 @@ func (scraper *Scraper) Scrape() {
 	close(queue)
 	wg.Wait()
 	bar.Finish()
+	log.SetOutput(os.Stderr)
 
 	scraper.Articles = articles
-	log.SetOutput(os.Stderr)
-	fmt.Printf("Failed to download %d articles\n", len(errors))
+	scraper.Failures = failures
 }
 
 func loadFeeds(path string) ([]feedreader.Feed, error) {

@@ -2,6 +2,7 @@ package feedreader
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -50,57 +51,36 @@ func (fr *FeedReader) Store(outDir string, location *time.Location) error {
 	return err
 }
 
-func (fr *FeedReader) StoreFailures(dir string) error {
-	path := filepath.Join(dir, "failures.json")
-	failuresJSON, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
+func (fr *FeedReader) LogFailures(dir string, location *time.Location) error {
+	logDir := filepath.Join(dir, "log")
 
-	var oldFailures []FeedFailure
-	err = json.Unmarshal(failuresJSON, &oldFailures)
-
-	newFailures := make([]FeedFailure, len(fr.FailedURLs))
-	for _, url := range fr.FailedURLs {
-		failure := FeedFailure{
-			URL:   url,
-			Count: 1,
+	if _, err := os.Stat(logDir); os.IsNotExist(err) {
+		err := os.MkdirAll(logDir, os.ModePerm)
+		if err != nil {
+			return err
 		}
-		newFailures = append(newFailures, failure)
 	}
 
-	failures := mergeFailures(newFailures, oldFailures)
-	failuresJSON, err = json.Marshal(failures)
+	filename := filepath.Join(logDir, "failed.txt")
+	file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(path, failuresJSON, 0644)
+	logText := ""
+	logTime := time.Now().In(location)
+	for _, url := range fr.FailedURLs {
+		logText += fmt.Sprintf("%s %s", logTime, url+"\n")
+	}
+
+	_, err = file.WriteString(logText)
+	if err != nil {
+		return err
+	}
+	err = file.Close()
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func mergeFailures(newFailures []FeedFailure, oldFailures []FeedFailure) []FeedFailure {
-	failureURLs := make(map[string]int, len(oldFailures))
-	for _, failure := range oldFailures {
-		failureURLs[failure.URL] = failure.Count
-	}
-
-	for _, failure := range newFailures {
-		failureURLs[failure.URL] += failure.Count
-	}
-
-	failures := make([]FeedFailure, 0)
-	for url, count := range failureURLs {
-		failure := FeedFailure{
-			URL:   url,
-			Count: count,
-		}
-		failures = append(failures, failure)
-	}
-
-	return failures
 }

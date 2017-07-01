@@ -43,6 +43,11 @@ var cmdFeeds = &cobra.Command{
 			return err
 		}
 
+		err = reader.LogFailures(feedOutDir, location)
+		if err != nil {
+			return err
+		}
+
 		err = reader.Store(feedOutDir, location)
 		if err != nil {
 			return err

@@ -19,27 +19,18 @@ var cmdScrape = &cobra.Command{
 	Use:   "scrape",
 	Short: "Scrape all provided articles",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if itemsInputFile == "" {
-			return errors.New("Please provide a file with articles")
-		}
 
 		location, err := time.LoadLocation(timezone)
 		if err != nil {
 			return err
 		}
 
-		stat, err := os.Stat(itemsInputFile)
+		path, err := getFeedsFilePath(location)
 		if err != nil {
 			return err
 		}
-		// Append current day to path when only received directory as input location
-		if stat.IsDir() {
-			// TODO check whether file for today exists
-			dayLocation := time.Now().In(location)
-			day := dayLocation.Format("2-1-2006")
-			itemsInputFile = filepath.Join(itemsInputFile, day+".json")
-		}
-		contentScraper, err := scraper.New(itemsInputFile)
+
+		contentScraper, err := scraper.New(path)
 		if err != nil {
 			return err
 		}
@@ -50,7 +41,7 @@ var cmdScrape = &cobra.Command{
 		for _, feed := range contentScraper.Feeds {
 			articles += len(feed.Items)
 		}
-		log.Printf("Successful: %d Failed: %d Time: %s", articles, contentScraper.Failures, time.Since(start))
+		log.Printf("%d successful, %d failures in %s from %s", articles, contentScraper.Failures, time.Since(start), path)
 
 		err = contentScraper.Store(contentOutDir, location)
 		if err != nil {
@@ -62,9 +53,45 @@ var cmdScrape = &cobra.Command{
 }
 
 func init() {
-	cmdScrape.PersistentFlags().StringVarP(&itemsInputFile, "file", "f", "", "Path to a JSON file with feed items")
+	cmdScrape.PersistentFlags().StringVarP(&itemsInputFile, "file", "f", "out/feeds", "Path to a JSON file with feed items")
 	cmdScrape.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
 	cmdScrape.PersistentFlags().StringVarP(&contentOutDir, "out", "o", "out/content/", "Directory where to store the articles")
 	cmdScrape.PersistentFlags().BoolVarP(&scrapeVerbose, "verbose", "v", false, "Verbose logging of scraper")
 	RootCmd.AddCommand(cmdScrape)
+}
+
+func getFeedsFilePath(location *time.Location) (string, error) {
+	if itemsInputFile == "" {
+		return "", errors.New("Please provide a file with articles")
+	}
+
+	stat, err := os.Stat(itemsInputFile)
+	if err != nil {
+		return "", err
+	}
+
+	// Append current day to path when only received directory as input location
+	if stat.IsDir() {
+		day := time.Now().In(location)
+		dayStr := day.Format("2-1-2006")
+		path := filepath.Join(itemsInputFile, dayStr+".json")
+		_, err := os.Stat(path)
+		if err == nil {
+			return path, nil
+		}
+
+		// most recent file could be from 1 day before
+		day = day.AddDate(0, 0, -1)
+		dayStr = day.Format("2-1-2006")
+		path = filepath.Join(itemsInputFile, dayStr+".json")
+
+		_, err = os.Stat(path)
+		if err != nil {
+			return "", nil
+		}
+
+		return path, nil
+	}
+
+	return itemsInputFile, nil
 }

@@ -1,12 +1,14 @@
 version: '2'
 services:
   crawler:
-    image: news-crawler
-    container_name: news-crawler
+    build: .
+    container_name: crawler
     links:
       - elasticsearch
     environment:
-      ELASTIC_SEARCH_URL: "http://elasticsearch:9200"
+      - ELASTIC_URL="http://elasticsearch:9200"
+      - ELASTIC_USER=elastic
+      - ELASTIC_PASSWORD=changeme
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:5.4.3

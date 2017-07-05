@@ -36,7 +36,11 @@ var cmdScrape = &cobra.Command{
 		}
 
 		start := time.Now()
-		contentScraper.Scrape(scrapeVerbose)
+		err = contentScraper.Scrape(scrapeVerbose)
+		if err != nil {
+			return err
+		}
+
 		articles := 0
 		for _, feed := range contentScraper.Feeds {
 			articles += len(feed.Items)

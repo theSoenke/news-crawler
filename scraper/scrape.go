@@ -19,14 +19,13 @@ const (
 
 type Scraper struct {
 	Feeds    []feedreader.Feed
-	Articles []*Article
+	Articles int
 	Failures int
 }
 
 type Article struct {
 	FeedItem *feedreader.FeedItem
 	HTML     string
-	Content  string
 }
 
 func New(feedsFile string) (Scraper, error) {
@@ -43,7 +42,7 @@ func New(feedsFile string) (Scraper, error) {
 }
 
 // Scrape downloads the content of the provide list of urls
-func (scraper *Scraper) Scrape(verbose bool) {
+func (scraper *Scraper) Scrape(verbose bool) error {
 	concurrencyLimit := 500
 	wg := sync.WaitGroup{}
 	queue := make(chan *feedreader.FeedItem)
@@ -56,8 +55,10 @@ func (scraper *Scraper) Scrape(verbose bool) {
 	}
 	bar := pb.StartNew(items)
 
-	// prevents "Unsolicited response" log messages from http package when encountering buggy webserver
-	log.SetOutput(ioutil.Discard)
+	if !verbose {
+		// prevents "Unsolicited response" log messages from http package when encountering buggy webserver
+		log.SetOutput(ioutil.Discard)
+	}
 
 	for worker := 0; worker < concurrencyLimit; worker++ {
 		wg.Add(1)
@@ -101,12 +102,22 @@ func (scraper *Scraper) Scrape(verbose bool) {
 		}
 	}(scraper.Feeds)
 
-	articles := make([]*Article, 0)
+	elasticClient, err := NewElasticClient()
+	if err != nil {
+		log.SetOutput(os.Stderr)
+		return err
+	}
+
+	articles := 0
 	failures := 0
 	for i := 0; i < items; i++ {
 		select {
 		case article := <-ch:
-			articles = append(articles, article)
+			err := article.StoreElastic(elasticClient)
+			if err != nil {
+				log.SetOutput(os.Stderr)
+				log.Fatal(err)
+			}
 		case <-errChan:
 			failures++
 		}
@@ -120,6 +131,8 @@ func (scraper *Scraper) Scrape(verbose bool) {
 
 	scraper.Articles = articles
 	scraper.Failures = failures
+
+	return nil
 }
 
 func loadFeeds(path string) ([]feedreader.Feed, error) {

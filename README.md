@@ -15,11 +15,14 @@ news-crawler feeds --file data/feeds_de.txt
 
 Download articles scraped by the feed downloader
 ```
+export ELASTIC_URL="http://localhost:9200"
+export ELASTIC_USER=elastic
+export ELASTIC_PASSWORD=changeme
 news-crawler scrape --file out/feeds/26-6-2017.json
 ```
 
 ## Run with Docker Compose
-Docker Compose start a crawler and elasticsearch container
+Run crawler and elasticsearch
 ```
 docker-compose up
 ```

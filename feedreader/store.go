@@ -9,11 +9,7 @@ import (
 	"time"
 )
 
-type FeedFailure struct {
-	URL   string `json:"url"`
-	Count int    `json:"count"`
-}
-
+// Store all downloaded feeds into a JSON file
 func (fr *FeedReader) Store(outDir string, location *time.Location) error {
 	if _, err := os.Stat(outDir); os.IsNotExist(err) {
 		err := os.MkdirAll(outDir, os.ModePerm)
@@ -51,6 +47,7 @@ func (fr *FeedReader) Store(outDir string, location *time.Location) error {
 	return err
 }
 
+// LogFailures stores all failed feed downloads
 func (fr *FeedReader) LogFailures(dir string, location *time.Location) error {
 	logDir := filepath.Join(dir, "log")
 
@@ -70,7 +67,7 @@ func (fr *FeedReader) LogFailures(dir string, location *time.Location) error {
 	logText := ""
 	logTime := time.Now().In(location)
 	for _, url := range fr.FailedURLs {
-		logText += fmt.Sprintf("%s %s", logTime, url+"\n")
+		logText += fmt.Sprintf("%s,%s", logTime, url+"\n")
 	}
 
 	_, err = file.WriteString(logText)

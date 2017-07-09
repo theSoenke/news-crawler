@@ -28,6 +28,7 @@ type Article struct {
 	HTML     string
 }
 
+// New creates a scraper instance
 func New(feedsFile string) (Scraper, error) {
 	scraper := Scraper{}
 

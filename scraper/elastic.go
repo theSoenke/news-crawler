@@ -7,6 +7,7 @@ import (
 	elastic "gopkg.in/olivere/elastic.v5"
 )
 
+// NewElasticClient creates a new client to connect to an elasticsearch cluster
 func NewElasticClient() (*elastic.Client, error) {
 	elasticURL := elastic.SetURL(os.Getenv("ELASTIC_URL"))
 	auth := elastic.SetBasicAuth(os.Getenv("ELASTIC_USER"), os.Getenv("ELASTIC_PASSWORD"))
@@ -18,6 +19,7 @@ func NewElasticClient() (*elastic.Client, error) {
 	return client, nil
 }
 
+// StoreElastic stores an article into elasticsearch
 func (article *Article) StoreElastic(client *elastic.Client) error {
 	ctx := context.Background()
 	_, err := client.Index().

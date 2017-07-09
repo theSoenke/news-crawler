@@ -1,19 +1,19 @@
 package scraper
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
 
-	"bytes"
-
 	"github.com/advancedlogic/GoOse"
 	"github.com/jlubawy/go-boilerpipe"
 	"github.com/jlubawy/go-boilerpipe/extractor"
 )
 
+// Fetch the content of an article from the web
 func (article *Article) Fetch() error {
 	timeout := time.Duration(60 * time.Second)
 	client := http.Client{
@@ -42,6 +42,7 @@ func (article *Article) Fetch() error {
 	return nil
 }
 
+// Extract the content of an article
 func (article *Article) Extract() error {
 	// content, err := extractContentGoOse(article.FeedItem.URL, article.HTML)
 	content, err := extractContentBoilerpipe(article.FeedItem.URL, article.HTML)

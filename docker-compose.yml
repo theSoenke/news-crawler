@@ -1,18 +1,19 @@
-version: '2'
+version: '2.1'
 services:
   crawler:
     build: .
     container_name: crawler
-    links:
-      - elasticsearch
+    restart: on-failure
+    depends_on:
+      elasticsearch:
+        condition: service_started
     environment:
-      - ELASTIC_URL="http://elasticsearch:9200"
+      - ELASTIC_URL=http://elasticsearch:9200
       - ELASTIC_USER=elastic
       - ELASTIC_PASSWORD=changeme
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:5.4.3
-    container_name: elasticsearch
     environment:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
@@ -25,8 +26,7 @@ services:
     volumes:
       - esdata:/usr/share/elasticsearch/data
     ports:
-      - 9200:9200
+      - "9200:9200"
 
 volumes:
   esdata:
-    driver: local

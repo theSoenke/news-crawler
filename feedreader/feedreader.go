@@ -112,12 +112,17 @@ func fetchFeed(url string) ([]*FeedItem, error) {
 
 	items := make([]*FeedItem, len(feed.Items))
 	for i, item := range feed.Items {
+		published := feed.PublishedParsed
+		publishedStr := ""
+		if published != nil {
+			publishedStr = published.String()
+		}
 
 		newItem := FeedItem{
 			Title:     item.Title,
 			Content:   item.Description,
 			URL:       item.Link,
-			Published: feed.PublishedParsed.String(),
+			Published: publishedStr,
 			GUID:      item.GUID,
 		}
 

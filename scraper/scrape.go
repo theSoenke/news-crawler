@@ -50,11 +50,11 @@ func (scraper *Scraper) Scrape(verbose bool) error {
 	errChan := make(chan bool)
 	ch := make(chan *Article)
 
-	items := 0
+	articles := 0
 	for _, feed := range scraper.Feeds {
-		items += len(feed.Items)
+		articles += len(feed.Items)
 	}
-	bar := pb.StartNew(items)
+	bar := pb.StartNew(articles)
 
 	if !verbose {
 		// prevents "Unsolicited response" log messages from http package when encountering buggy webserver
@@ -109,9 +109,8 @@ func (scraper *Scraper) Scrape(verbose bool) error {
 		return err
 	}
 
-	articles := 0
 	failures := 0
-	for i := 0; i < items; i++ {
+	for i := 0; i < articles; i++ {
 		select {
 		case article := <-ch:
 			err := article.StoreElastic(elasticClient)

@@ -40,11 +40,7 @@ var cmdScrape = &cobra.Command{
 			return err
 		}
 
-		articles := 0
-		for _, feed := range contentScraper.Feeds {
-			articles += len(feed.Items)
-		}
-		log.Printf("Articles: %d successful, %d failures in %s from %s", articles, contentScraper.Failures, time.Since(start), path)
+		log.Printf("Articles: %d successful, %d failures in %s from %s", contentScraper.Articles-contentScraper.Failures, contentScraper.Failures, time.Since(start), path)
 
 		return nil
 	},

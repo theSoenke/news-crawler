@@ -34,8 +34,13 @@ var cmdScrape = &cobra.Command{
 			return err
 		}
 
+		elasticClient, err := scraper.NewElasticClient()
+		if err != nil {
+			return err
+		}
+
 		start := time.Now()
-		err = contentScraper.Scrape(scrapeVerbose)
+		err = contentScraper.Scrape(elasticClient, scrapeVerbose)
 		if err != nil {
 			return err
 		}

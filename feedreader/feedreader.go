@@ -44,8 +44,9 @@ func New(feedsFile string) (FeedReader, error) {
 	return feedreader, nil
 }
 
+// Fetch feed items
 func (fr *FeedReader) Fetch(verbose bool) error {
-	concurrencyLimit := 200
+	concurrencyLimit := 100
 	wg := sync.WaitGroup{}
 	queue := make(chan string)
 	errURLChan := make(chan string)

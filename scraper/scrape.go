@@ -2,15 +2,16 @@ package scraper
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
 	"sync"
 
-	"fmt"
-
 	"github.com/thesoenke/news-crawler/feedreader"
 	"gopkg.in/cheggaaa/pb.v1"
+	"gopkg.in/olivere/elastic.v5"
 )
 
 const (
@@ -43,23 +44,55 @@ func New(feedsFile string) (Scraper, error) {
 }
 
 // Scrape downloads the content of the provide list of urls
-func (scraper *Scraper) Scrape(verbose bool) error {
-	concurrencyLimit := 500
+func (scraper *Scraper) Scrape(elasticClient *elastic.Client, verbose bool) error {
 	wg := sync.WaitGroup{}
 	queue := make(chan *feedreader.FeedItem)
 	errChan := make(chan bool)
-	ch := make(chan *Article)
+	articleChan := make(chan *Article)
 
-	articles := 0
+	numItems := 0
 	for _, feed := range scraper.Feeds {
-		articles += len(feed.Items)
+		numItems += len(feed.Items)
 	}
-	bar := pb.StartNew(articles)
+	bar := pb.StartNew(numItems)
 
 	if !verbose {
 		// prevents "Unsolicited response" log messages from http package when encountering buggy webserver
 		log.SetOutput(ioutil.Discard)
 	}
+
+	startWorker(&wg, queue, articleChan, errChan, verbose)
+	go fillWorker(queue, scraper.Feeds)
+
+	failures := 0
+	for i := 0; i < numItems; i++ {
+		select {
+		case article := <-articleChan:
+			// err := article.Store()
+			err := article.StoreElastic(elasticClient)
+			if err != nil {
+				log.SetOutput(os.Stderr)
+				log.Fatal(err)
+			}
+		case <-errChan:
+			failures++
+		}
+		bar.Increment()
+	}
+
+	close(queue)
+	wg.Wait()
+	bar.Finish()
+	log.SetOutput(os.Stderr)
+
+	scraper.Articles = numItems
+	scraper.Failures = failures
+
+	return nil
+}
+
+func startWorker(wg *sync.WaitGroup, queue chan *feedreader.FeedItem, articleChan chan *Article, errChan chan bool, verbose bool) {
+	concurrencyLimit := 100
 
 	for worker := 0; worker < concurrencyLimit; worker++ {
 		wg.Add(1)
@@ -90,49 +123,26 @@ func (scraper *Scraper) Scrape(verbose bool) error {
 					continue
 				}
 
-				ch <- article
+				articleChan <- article
 			}
 		}(verbose)
 	}
+}
 
-	go func(feeds []feedreader.Feed) {
-		for _, feed := range feeds {
-			for _, item := range feed.Items {
-				queue <- item
-			}
+func fillWorker(queue chan *feedreader.FeedItem, feeds []feedreader.Feed) {
+	items := make([]*feedreader.FeedItem, 0)
+
+	for _, feed := range feeds {
+		for _, item := range feed.Items {
+			items = append(items, item)
 		}
-	}(scraper.Feeds)
-
-	elasticClient, err := NewElasticClient()
-	if err != nil {
-		log.SetOutput(os.Stderr)
-		return err
 	}
 
-	failures := 0
-	for i := 0; i < articles; i++ {
-		select {
-		case article := <-ch:
-			err := article.StoreElastic(elasticClient)
-			if err != nil {
-				log.SetOutput(os.Stderr)
-				log.Fatal(err)
-			}
-		case <-errChan:
-			failures++
-		}
-		bar.Increment()
+	shuffle(items)
+
+	for _, item := range items {
+		queue <- item
 	}
-
-	close(queue)
-	wg.Wait()
-	bar.Finish()
-	log.SetOutput(os.Stderr)
-
-	scraper.Articles = articles
-	scraper.Failures = failures
-
-	return nil
 }
 
 func loadFeeds(path string) ([]feedreader.Feed, error) {
@@ -148,4 +158,17 @@ func loadFeeds(path string) ([]feedreader.Feed, error) {
 	}
 
 	return feeds, nil
+}
+
+// Store article in file
+func (article *Article) Store() error {
+	// TODO
+	return nil
+}
+
+func shuffle(items []*feedreader.FeedItem) {
+	for i := range items {
+		j := rand.Intn(i + 1)
+		items[i], items[j] = items[j], items[i]
+	}
 }

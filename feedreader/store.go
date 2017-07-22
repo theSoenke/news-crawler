@@ -22,6 +22,7 @@ func (fr *FeedReader) Store(outDir string, location *time.Location) error {
 	day := dayLocation.Format("2-1-2006")
 	feedFile := filepath.Join(outDir, day+".json")
 	feeds := fr.Feeds
+
 	if _, err := os.Stat(feedFile); !os.IsNotExist(err) {
 		feedsFile, err := ioutil.ReadFile(feedFile)
 		if err != nil {
@@ -66,7 +67,7 @@ func (fr *FeedReader) LogFailures(dir string, location *time.Location) error {
 
 	logText := ""
 	logTime := time.Now().In(location)
-	for _, url := range fr.FailedURLs {
+	for _, url := range fr.FailedFeeds {
 		logText += fmt.Sprintf("%s,%s", logTime, url+"\n")
 	}
 

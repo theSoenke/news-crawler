@@ -3,11 +3,16 @@ package feedreader
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"sync"
 	"time"
 
-	"github.com/mmcdole/gofeed"
+	"github.com/SlyMarbo/rss"
 	"gopkg.in/cheggaaa/pb.v1"
+)
+
+const (
+	userAgent = "Mozilla/5.0 (X11; Linux x86_64; rv:53.0) Gecko/20100101 Firefox/53.0"
 )
 
 // Feed represent an RSS/Atom feed
@@ -26,9 +31,9 @@ type FeedItem struct {
 }
 
 type FeedReader struct {
-	Sources    []string
-	Feeds      []Feed
-	FailedURLs []string
+	Sources     []string
+	Feeds       []Feed
+	FailedFeeds []string
 }
 
 // New creates a feedreader
@@ -86,53 +91,61 @@ func (fr *FeedReader) Fetch(verbose bool) error {
 	}(fr.Sources)
 
 	feeds := make([]Feed, 0)
-	failed := make([]string, 0)
+	failedFeeds := make([]string, 0)
 	for i := 0; i < count; i++ {
 		select {
 		case feed := <-feedChan:
 			feeds = append(feeds, *feed)
 		case url := <-errURLChan:
-			failed = append(failed, url)
+			failedFeeds = append(failedFeeds, url)
 		}
 		bar.Increment()
 	}
 	bar.Finish()
 
 	fr.Feeds = feeds
-	fr.FailedURLs = failed
+	fr.FailedFeeds = failedFeeds
 
 	return nil
 }
 
-func fetchFeed(url string) ([]*FeedItem, error) {
-	feedParser := gofeed.NewParser()
-	feed, err := feedParser.ParseURL(url)
+func fetchFeedURL(url string) (*http.Response, error) {
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	items := make([]*FeedItem, len(feed.Items))
-	for i, item := range feed.Items {
-		published := feed.PublishedParsed
-		publishedStr := ""
-		if published != nil {
-			publishedStr = published.String()
-		}
+	req.Header.Set("User-Agent", userAgent)
+	timeout := time.Duration(60 * time.Second)
+	client := http.Client{
+		Timeout: timeout,
+	}
 
+	return client.Do(req)
+}
+
+func fetchFeed(url string) ([]*FeedItem, error) {
+	feed, err := rss.FetchByFunc(fetchFeedURL, url)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]*FeedItem, 0)
+	for _, item := range feed.Items {
 		newItem := FeedItem{
 			Title:     item.Title,
-			Content:   item.Description,
+			Content:   item.Content,
 			URL:       item.Link,
-			Published: publishedStr,
-			GUID:      item.GUID,
+			Published: item.Date.String(),
+			GUID:      item.ID,
 		}
 
 		err := newItem.validate()
 		if err != nil {
-			return nil, err
+			continue
 		}
 
-		items[i] = &newItem
+		items = append(items, &newItem)
 	}
 
 	return items, nil
@@ -145,10 +158,6 @@ func (item *FeedItem) validate() error {
 
 	if item.GUID == "" {
 		item.GUID = item.URL
-	}
-
-	if item.Published == "" {
-		item.Published = time.Now().String()
 	}
 
 	return nil

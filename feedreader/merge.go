@@ -28,14 +28,13 @@ func loadFeeds(path string) ([]string, error) {
 
 func merge(newFeeds []Feed, oldFeeds []Feed) []Feed {
 	oldFeedsMap := make(map[string][]*FeedItem, len(oldFeeds))
-	feeds := make([]Feed, len(newFeeds))
-
 	for _, feed := range oldFeeds {
 		oldFeedsMap[feed.URL] = feed.Items
 	}
 
+	feeds := make([]Feed, 0)
 	for _, feed := range newFeeds {
-		if oldFeedsMap[feed.URL] != nil {
+		if _, ok := oldFeedsMap[feed.URL]; ok {
 			items := removeDuplicates(feed.Items, oldFeedsMap[feed.URL])
 			newFeed := Feed{
 				URL:   feed.URL,

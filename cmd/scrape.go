@@ -76,21 +76,9 @@ func getFeedsFilePath(itemsInputFile string, location *time.Location) (string, e
 		dayStr := day.Format("2-1-2006")
 		path := filepath.Join(itemsInputFile, dayStr+".json")
 		_, err := os.Stat(path)
-		if err == nil {
+		if err != nil {
 			return path, nil
 		}
-
-		// most recent file could be from 1 day before
-		day = day.AddDate(0, 0, -1)
-		dayStr = day.Format("2-1-2006")
-		path = filepath.Join(itemsInputFile, dayStr+".json")
-
-		_, err = os.Stat(path)
-		if err != nil {
-			return "", nil
-		}
-
-		return path, nil
 	}
 
 	return itemsInputFile, nil

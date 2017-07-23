@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"log"
 	"time"
 
@@ -9,7 +8,6 @@ import (
 	"github.com/thesoenke/news-crawler/feedreader"
 )
 
-var feedInputFile string
 var feedOutDir string
 var feedsVerbose bool
 
@@ -17,10 +15,7 @@ var cmdFeeds = &cobra.Command{
 	Use:   "feeds",
 	Short: "Scrape all provided feeds",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if feedInputFile == "" {
-			return errors.New("Please provide a file with feeds")
-		}
-
+		feedInputFile := args[0]
 		reader, err := feedreader.New(feedInputFile)
 		if err != nil {
 			return err
@@ -58,7 +53,7 @@ var cmdFeeds = &cobra.Command{
 }
 
 func init() {
-	cmdFeeds.PersistentFlags().StringVarP(&feedInputFile, "file", "f", "feeds/feeds_de.txt", "Path to a file with feeds")
+	cmdFeeds.Args = cobra.ExactArgs(1)
 	cmdFeeds.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
 	cmdFeeds.PersistentFlags().StringVarP(&feedOutDir, "out", "o", "out/feeds/", "Directory where to store the feed items")
 	cmdFeeds.PersistentFlags().BoolVarP(&feedsVerbose, "verbose", "v", false, "Output more detailed logging")

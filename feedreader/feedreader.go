@@ -50,7 +50,7 @@ func New(feedsFile string) (FeedReader, error) {
 }
 
 // Fetch feed items
-func (fr *FeedReader) Fetch(verbose bool) error {
+func (fr *FeedReader) Fetch(dayTime *time.Time, verbose bool) error {
 	concurrencyLimit := 100
 	wg := sync.WaitGroup{}
 	queue := make(chan string)
@@ -66,7 +66,7 @@ func (fr *FeedReader) Fetch(verbose bool) error {
 			defer wg.Done()
 
 			for url := range queue {
-				items, err := fetchFeed(url)
+				items, err := fetchFeed(url, dayTime)
 				if err != nil {
 					if verbose {
 						log.Printf("Failed to fetch feed %s %s", url, err)
@@ -116,7 +116,7 @@ func fetchFeedURL(url string) (*http.Response, error) {
 	}
 
 	req.Header.Set("User-Agent", userAgent)
-	timeout := time.Duration(60 * time.Second)
+	timeout := time.Duration(30 * time.Second)
 	client := http.Client{
 		Timeout: timeout,
 	}
@@ -124,14 +124,20 @@ func fetchFeedURL(url string) (*http.Response, error) {
 	return client.Do(req)
 }
 
-func fetchFeed(url string) ([]*FeedItem, error) {
+func fetchFeed(url string, dayTime *time.Time) ([]*FeedItem, error) {
 	feed, err := rss.FetchByFunc(fetchFeedURL, url)
 	if err != nil {
 		return nil, err
 	}
 
+	day := dayTime.Format("2-1-2006")
 	items := make([]*FeedItem, 0)
 	for _, item := range feed.Items {
+		// only accept feed items from today
+		if item.Date.Format("2-1-2006") != day {
+			continue
+		}
+
 		newItem := FeedItem{
 			Title:     item.Title,
 			Content:   item.Content,

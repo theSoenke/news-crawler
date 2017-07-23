@@ -10,7 +10,7 @@ import (
 )
 
 // Store all downloaded feeds into a JSON file
-func (fr *FeedReader) Store(outDir string, location *time.Location) error {
+func (fr *FeedReader) Store(outDir string, dayTime *time.Time) error {
 	if _, err := os.Stat(outDir); os.IsNotExist(err) {
 		err := os.MkdirAll(outDir, os.ModePerm)
 		if err != nil {
@@ -18,8 +18,7 @@ func (fr *FeedReader) Store(outDir string, location *time.Location) error {
 		}
 	}
 
-	dayLocation := time.Now().In(location)
-	day := dayLocation.Format("2-1-2006")
+	day := dayTime.Format("2-1-2006")
 	feedFile := filepath.Join(outDir, day+".json")
 	feeds := fr.Feeds
 
@@ -49,7 +48,7 @@ func (fr *FeedReader) Store(outDir string, location *time.Location) error {
 }
 
 // LogFailures stores all failed feed downloads
-func (fr *FeedReader) LogFailures(dir string, location *time.Location) error {
+func (fr *FeedReader) LogFailures(dir string, dayTime *time.Time) error {
 	logDir := filepath.Join(dir, "log")
 
 	if _, err := os.Stat(logDir); os.IsNotExist(err) {
@@ -66,9 +65,8 @@ func (fr *FeedReader) LogFailures(dir string, location *time.Location) error {
 	}
 
 	logText := ""
-	logTime := time.Now().In(location)
 	for _, url := range fr.FailedFeeds {
-		logText += fmt.Sprintf("%s,%s", logTime, url+"\n")
+		logText += fmt.Sprintf("%s,%s", dayTime, url+"\n")
 	}
 
 	_, err = file.WriteString(logText)

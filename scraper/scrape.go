@@ -45,7 +45,7 @@ func New(feedsFile string) (Scraper, error) {
 }
 
 // Scrape downloads the content of the provide list of urls
-func (scraper *Scraper) Scrape(outDir string, location *time.Location, elasticClient *elastic.Client, verbose bool) error {
+func (scraper *Scraper) Scrape(outDir string, dayTime *time.Time, elasticClient *elastic.Client, verbose bool) error {
 	wg := sync.WaitGroup{}
 	queue := make(chan *feedreader.FeedItem)
 	errChan := make(chan bool)
@@ -69,7 +69,7 @@ func (scraper *Scraper) Scrape(outDir string, location *time.Location, elasticCl
 	for i := 0; i < numItems; i++ {
 		select {
 		case article := <-articleChan:
-			err := article.Write(outDir, location)
+			err := article.Write(outDir, dayTime)
 			if err != nil {
 				log.SetOutput(os.Stderr)
 				return err

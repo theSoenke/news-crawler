@@ -9,9 +9,8 @@ import (
 )
 
 // Write article to file
-func (article *Article) Write(outDir string, location *time.Location) error {
-	dayLocation := time.Now().In(location)
-	day := dayLocation.Format("2-1-2006")
+func (article *Article) Write(outDir string, dayTime *time.Time) error {
+	day := dayTime.Format("2-1-2006")
 	dayDir := filepath.Join(outDir, day)
 
 	if _, err := os.Stat(dayDir); os.IsNotExist(err) {

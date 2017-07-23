@@ -21,8 +21,14 @@ var cmdFeeds = &cobra.Command{
 			return err
 		}
 
+		location, err := time.LoadLocation(timezone)
+		if err != nil {
+			return err
+		}
+
+		dayTime := time.Now().In(location)
 		start := time.Now()
-		err = reader.Fetch(feedsVerbose)
+		err = reader.Fetch(&dayTime, feedsVerbose)
 		if err != nil {
 			return err
 		}
@@ -33,17 +39,12 @@ var cmdFeeds = &cobra.Command{
 		}
 		log.Printf("Feeds: %d successful, %d failures, %d items in %s", len(reader.Feeds), len(reader.FailedFeeds), items, time.Since(start))
 
-		location, err := time.LoadLocation(timezone)
+		err = reader.LogFailures(feedOutDir, &dayTime)
 		if err != nil {
 			return err
 		}
 
-		err = reader.LogFailures(feedOutDir, location)
-		if err != nil {
-			return err
-		}
-
-		err = reader.Store(feedOutDir, location)
+		err = reader.Store(feedOutDir, &dayTime)
 		if err != nil {
 			return err
 		}

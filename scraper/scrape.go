@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/thesoenke/news-crawler/feedreader"
 	"gopkg.in/cheggaaa/pb.v1"
@@ -44,7 +45,7 @@ func New(feedsFile string) (Scraper, error) {
 }
 
 // Scrape downloads the content of the provide list of urls
-func (scraper *Scraper) Scrape(elasticClient *elastic.Client, verbose bool) error {
+func (scraper *Scraper) Scrape(outDir string, location *time.Location, elasticClient *elastic.Client, verbose bool) error {
 	wg := sync.WaitGroup{}
 	queue := make(chan *feedreader.FeedItem)
 	errChan := make(chan bool)
@@ -68,11 +69,16 @@ func (scraper *Scraper) Scrape(elasticClient *elastic.Client, verbose bool) erro
 	for i := 0; i < numItems; i++ {
 		select {
 		case article := <-articleChan:
-			// err := article.Store()
-			err := article.StoreElastic(elasticClient)
+			err := article.Write(outDir, location)
 			if err != nil {
 				log.SetOutput(os.Stderr)
-				log.Fatal(err)
+				return err
+			}
+
+			err = article.Index(elasticClient)
+			if err != nil {
+				log.SetOutput(os.Stderr)
+				return err
 			}
 		case <-errChan:
 			failures++
@@ -158,12 +164,6 @@ func loadFeeds(path string) ([]feedreader.Feed, error) {
 	}
 
 	return feeds, nil
-}
-
-// Store article in file
-func (article *Article) Store() error {
-	// TODO
-	return nil
 }
 
 func shuffle(items []*feedreader.FeedItem) {

@@ -11,6 +11,7 @@ import (
 	"github.com/thesoenke/news-crawler/scraper"
 )
 
+var scrapeOutDir string
 var scrapeVerbose bool
 
 var cmdScrape = &cobra.Command{
@@ -40,7 +41,7 @@ var cmdScrape = &cobra.Command{
 		}
 
 		start := time.Now()
-		err = contentScraper.Scrape(elasticClient, scrapeVerbose)
+		err = contentScraper.Scrape(scrapeOutDir, location, elasticClient, scrapeVerbose)
 		if err != nil {
 			return err
 		}
@@ -53,6 +54,7 @@ var cmdScrape = &cobra.Command{
 
 func init() {
 	cmdScrape.Args = cobra.ExactArgs(1)
+	cmdScrape.PersistentFlags().StringVarP(&scrapeOutDir, "out", "o", "out/content/", "Directory where to store the scraped articles")
 	cmdScrape.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
 	cmdScrape.PersistentFlags().BoolVarP(&scrapeVerbose, "verbose", "v", false, "Verbose logging of scraper")
 	RootCmd.AddCommand(cmdScrape)

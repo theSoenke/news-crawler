@@ -19,8 +19,8 @@ func NewElasticClient() (*elastic.Client, error) {
 	return client, nil
 }
 
-// StoreElastic stores an article into elasticsearch
-func (article *Article) StoreElastic(client *elastic.Client) error {
+// Index article in elasticsearch
+func (article *Article) Index(client *elastic.Client) error {
 	ctx := context.Background()
 	_, err := client.Index().
 		Index("news").

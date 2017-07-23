@@ -10,7 +10,7 @@ make
 ## Run
 Download feeds provided in an input file
 ```
-news-crawler feeds --file data/feeds_de.txt
+news-crawler feeds data/feeds_de.txt
 ```
 
 Download articles scraped by the feed downloader
@@ -18,7 +18,7 @@ Download articles scraped by the feed downloader
 export ELASTIC_URL="http://localhost:9200"
 export ELASTIC_USER=elastic
 export ELASTIC_PASSWORD=changeme
-news-crawler scrape --file out/feeds/26-6-2017.json
+news-crawler scrape out/feeds/26-6-2017.json
 ```
 
 ## Run with Docker Compose

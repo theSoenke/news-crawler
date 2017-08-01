@@ -20,12 +20,8 @@ func (article *Article) Write(outDir string, dayTime *time.Time) error {
 		}
 	}
 
-	filename := strings.Replace(filepath.FromSlash(article.FeedItem.URL), "/", "\\", -1) + ".html"
+	filename := strings.Replace(article.FeedItem.URL, "/", "\\", -1) + ".html"
 	articlePath := filepath.Join(dayDir, filename)
 	err := ioutil.WriteFile(articlePath, []byte(article.HTML), 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

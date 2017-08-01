@@ -43,7 +43,6 @@ func (fr *FeedReader) Store(outDir string, dayTime *time.Time) error {
 	}
 
 	err = ioutil.WriteFile(feedFile, jsonFeeds, 0644)
-
 	return err
 }
 

@@ -62,6 +62,11 @@ func (scraper *Scraper) Scrape(outDir string, dayTime *time.Time, elasticClient 
 		log.SetOutput(ioutil.Discard)
 	}
 
+	err := createIndex(elasticClient)
+	if err != nil {
+		return err
+	}
+
 	startWorker(&wg, queue, articleChan, errChan, verbose)
 	go fillWorker(queue, scraper.Feeds)
 
@@ -139,9 +144,7 @@ func fillWorker(queue chan *feedreader.FeedItem, feeds []feedreader.Feed) {
 	items := make([]*feedreader.FeedItem, 0)
 
 	for _, feed := range feeds {
-		for _, item := range feed.Items {
-			items = append(items, item)
-		}
+		items = append(items, feed.Items...)
 	}
 
 	shuffle(items)

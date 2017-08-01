@@ -28,12 +28,7 @@ func (article *Article) Index(client *elastic.Client) error {
 		BodyJson(article.FeedItem).
 		Refresh("true").
 		Do(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func createIndex(client *elastic.Client) error {

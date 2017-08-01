@@ -14,6 +14,10 @@ func (article *Article) Fetch() error {
 		Timeout: timeout,
 	}
 	req, err := http.NewRequest("GET", article.FeedItem.URL, nil)
+	if err != nil {
+		return err
+	}
+
 	req.Header.Set("User-Agent", userAgent)
 	resp, err := client.Do(req)
 	if err != nil {

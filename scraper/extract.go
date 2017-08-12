@@ -17,8 +17,8 @@ func Run(inputDir string) error {
 
 // Extract the content of an article
 func (article *Article) Extract() error {
-	// content, err := extractContentGoOse(article.FeedItem.URL, article.HTML)
-	content, err := extractContentBoilerpipe(article.FeedItem.URL, article.HTML)
+	// content, err := ExtractContentGoOse(article.FeedItem.URL, article.HTML)
+	content, err := ExtractContentBoilerpipe(article.FeedItem.URL, article.HTML)
 	if err != nil {
 		return err
 	}
@@ -28,7 +28,7 @@ func (article *Article) Extract() error {
 	return nil
 }
 
-func extractContentGoOse(url string, html string) (string, error) {
+func ExtractContentGoOse(url string, html string) (string, error) {
 	g := goose.New()
 	article, err := g.ExtractFromRawHTML(url, html)
 	if err != nil {
@@ -38,7 +38,7 @@ func extractContentGoOse(url string, html string) (string, error) {
 	return article.CleanedText, nil
 }
 
-func extractContentBoilerpipe(urlStr string, html string) (string, error) {
+func ExtractContentBoilerpipe(urlStr string, html string) (string, error) {
 	reader := bytes.NewReader([]byte(html))
 	url, err := url.Parse(urlStr)
 	if err != nil {

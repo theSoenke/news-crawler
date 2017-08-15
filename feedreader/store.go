@@ -49,7 +49,6 @@ func (fr *FeedReader) Store(outDir string, dayTime *time.Time) error {
 // LogFailures stores all failed feed downloads
 func (fr *FeedReader) LogFailures(dir string, dayTime *time.Time) error {
 	logDir := filepath.Join(dir, "log")
-
 	if _, err := os.Stat(logDir); os.IsNotExist(err) {
 		err := os.MkdirAll(logDir, os.ModePerm)
 		if err != nil {
@@ -73,9 +72,5 @@ func (fr *FeedReader) LogFailures(dir string, dayTime *time.Time) error {
 		return err
 	}
 	err = file.Close()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

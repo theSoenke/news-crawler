@@ -20,9 +20,9 @@ func NewElasticClient() (*elastic.Client, error) {
 }
 
 // Index article in elasticsearch
-func (article *Article) Index(client *elastic.Client) error {
+func (scraper *Scraper) index(article *Article) error {
 	ctx := context.Background()
-	_, err := client.Index().
+	_, err := scraper.ElasticClient.Index().
 		Index("news").
 		Type("article").
 		BodyJson(article.FeedItem).
@@ -31,19 +31,17 @@ func (article *Article) Index(client *elastic.Client) error {
 	return err
 }
 
-func createIndex(client *elastic.Client) error {
+func (scraper *Scraper) createIndex() error {
 	ctx := context.Background()
-	exists, err := client.IndexExists("news").Do(ctx)
+	exists, err := scraper.ElasticClient.IndexExists("news").Do(ctx)
 	if err != nil {
 		return err
 	}
 
-	if !exists {
-		_, err := client.CreateIndex("news").Do(ctx)
-		if err != nil {
-			return err
-		}
+	if exists {
+		return nil
 	}
 
-	return nil
+	_, err = scraper.ElasticClient.CreateIndex("news").Do(ctx)
+	return err
 }

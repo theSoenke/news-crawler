@@ -20,9 +20,10 @@ const (
 )
 
 type Scraper struct {
-	Feeds    []feedreader.Feed
-	Articles int
-	Failures int
+	Feeds         []feedreader.Feed
+	Articles      int
+	Failures      int
+	ElasticClient *elastic.Client
 }
 
 type Article struct {
@@ -33,6 +34,12 @@ type Article struct {
 // New creates a scraper instance
 func New(feedsFile string) (Scraper, error) {
 	scraper := Scraper{}
+	esClient, err := NewElasticClient()
+	if err != nil {
+		return scraper, err
+	}
+
+	scraper.ElasticClient = esClient
 	feeds, err := scraper.loadFeeds(feedsFile)
 	if err != nil {
 		return scraper, err
@@ -43,28 +50,27 @@ func New(feedsFile string) (Scraper, error) {
 }
 
 // Scrape downloads the content of the provide list of urls
-func (scraper *Scraper) Scrape(outDir string, dayTime *time.Time, elasticClient *elastic.Client, verbose bool) error {
+func (scraper *Scraper) Scrape(outDir string, dayTime *time.Time, verbose bool) error {
 	wg := sync.WaitGroup{}
 	queue := make(chan *feedreader.FeedItem)
 	errChan := make(chan bool)
 	articleChan := make(chan *Article)
-
 	numItems := 0
 	for _, feed := range scraper.Feeds {
 		numItems += len(feed.Items)
 	}
-	bar := pb.StartNew(numItems)
 
 	if !verbose {
 		// prevents "Unsolicited response" log messages from http package when encountering buggy webserver
 		log.SetOutput(ioutil.Discard)
 	}
 
-	err := createIndex(elasticClient)
+	err := scraper.createIndex()
 	if err != nil {
 		return err
 	}
 
+	bar := pb.StartNew(numItems)
 	scraper.startWorker(&wg, queue, articleChan, errChan, verbose)
 	go scraper.fillWorker(queue, scraper.Feeds)
 
@@ -78,7 +84,7 @@ func (scraper *Scraper) Scrape(outDir string, dayTime *time.Time, elasticClient 
 				return err
 			}
 
-			err = article.Index(elasticClient)
+			err = scraper.index(article)
 			if err != nil {
 				log.SetOutput(os.Stderr)
 				return err
@@ -140,13 +146,11 @@ func (scraper *Scraper) startWorker(wg *sync.WaitGroup, queue chan *feedreader.F
 
 func (scraper *Scraper) fillWorker(queue chan *feedreader.FeedItem, feeds []feedreader.Feed) {
 	items := make([]*feedreader.FeedItem, 0)
-
 	for _, feed := range feeds {
 		items = append(items, feed.Items...)
 	}
 
 	shuffle(items)
-
 	for _, item := range items {
 		queue <- item
 	}
@@ -160,11 +164,7 @@ func (scraper *Scraper) loadFeeds(path string) ([]feedreader.Feed, error) {
 
 	var feeds []feedreader.Feed
 	err = json.Unmarshal(articlesFile, &feeds)
-	if err != nil {
-		return nil, err
-	}
-
-	return feeds, nil
+	return feeds, err
 }
 
 func shuffle(items []*feedreader.FeedItem) {

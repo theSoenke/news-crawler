@@ -5,10 +5,10 @@ import (
 	"os"
 )
 
-func loadFeeds(path string) ([]string, error) {
+func (fr *FeedReader) loadSources(path string) error {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	defer file.Close()
@@ -19,11 +19,13 @@ func loadFeeds(path string) ([]string, error) {
 		feeds = append(feeds, scanner.Text())
 	}
 
-	if err = scanner.Err(); err != nil {
-		return nil, err
+	err = scanner.Err()
+	if err != nil {
+		return err
 	}
 
-	return feeds, nil
+	fr.Sources = feeds
+	return nil
 }
 
 func merge(newFeeds []Feed, oldFeeds []Feed) []Feed {
@@ -51,7 +53,6 @@ func merge(newFeeds []Feed, oldFeeds []Feed) []Feed {
 
 func removeDuplicates(newItems []*FeedItem, oldItems []*FeedItem) []*FeedItem {
 	found := make(map[string]bool)
-
 	for _, item := range oldItems {
 		found[item.GUID] = true
 	}

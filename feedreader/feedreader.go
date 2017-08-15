@@ -39,14 +39,8 @@ type FeedReader struct {
 // New creates a feedreader
 func New(feedsFile string) (FeedReader, error) {
 	feedreader := FeedReader{}
-	feeds, err := loadFeeds(feedsFile)
-	if err != nil {
-		return feedreader, err
-	}
-
-	feedreader.Sources = feeds
-
-	return feedreader, nil
+	err := feedreader.loadSources(feedsFile)
+	return feedreader, err
 }
 
 // Fetch feed items

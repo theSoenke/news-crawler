@@ -9,12 +9,6 @@ import (
 	"github.com/jlubawy/go-boilerpipe/extractor"
 )
 
-// Run extraction process
-func Run(inputDir string) error {
-
-	return nil
-}
-
 // Extract the content of an article
 func (article *Article) Extract() error {
 	// content, err := ExtractContentGoOse(article.FeedItem.URL, article.HTML)
@@ -24,7 +18,6 @@ func (article *Article) Extract() error {
 	}
 
 	article.FeedItem.Content = content
-
 	return nil
 }
 
@@ -50,6 +43,5 @@ func ExtractContentBoilerpipe(urlStr string, html string) (string, error) {
 		return "", err
 	}
 	extractor.Article().Process(doc)
-
 	return doc.Content(), nil
 }

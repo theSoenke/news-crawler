@@ -36,6 +36,5 @@ func (article *Article) Fetch() error {
 	}
 
 	article.HTML = string(body)
-
 	return nil
 }

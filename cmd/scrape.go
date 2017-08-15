@@ -36,19 +36,13 @@ var cmdScrape = &cobra.Command{
 			return err
 		}
 
-		elasticClient, err := scraper.NewElasticClient()
-		if err != nil {
-			return err
-		}
-
 		start := time.Now()
-		err = contentScraper.Scrape(scrapeOutDir, &dayTime, elasticClient, scrapeVerbose)
+		err = contentScraper.Scrape(scrapeOutDir, &dayTime, scrapeVerbose)
 		if err != nil {
 			return err
 		}
 
 		log.Printf("Articles: %d successful, %d failures in %s from %s", contentScraper.Articles-contentScraper.Failures, contentScraper.Failures, time.Since(start), path)
-
 		return nil
 	},
 }

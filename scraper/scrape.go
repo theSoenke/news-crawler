@@ -33,14 +33,12 @@ type Article struct {
 // New creates a scraper instance
 func New(feedsFile string) (Scraper, error) {
 	scraper := Scraper{}
-
-	feeds, err := loadFeeds(feedsFile)
+	feeds, err := scraper.loadFeeds(feedsFile)
 	if err != nil {
 		return scraper, err
 	}
 
 	scraper.Feeds = feeds
-
 	return scraper, nil
 }
 
@@ -67,8 +65,8 @@ func (scraper *Scraper) Scrape(outDir string, dayTime *time.Time, elasticClient 
 		return err
 	}
 
-	startWorker(&wg, queue, articleChan, errChan, verbose)
-	go fillWorker(queue, scraper.Feeds)
+	scraper.startWorker(&wg, queue, articleChan, errChan, verbose)
+	go scraper.fillWorker(queue, scraper.Feeds)
 
 	failures := 0
 	for i := 0; i < numItems; i++ {
@@ -102,7 +100,7 @@ func (scraper *Scraper) Scrape(outDir string, dayTime *time.Time, elasticClient 
 	return nil
 }
 
-func startWorker(wg *sync.WaitGroup, queue chan *feedreader.FeedItem, articleChan chan *Article, errChan chan bool, verbose bool) {
+func (scraper *Scraper) startWorker(wg *sync.WaitGroup, queue chan *feedreader.FeedItem, articleChan chan *Article, errChan chan bool, verbose bool) {
 	concurrencyLimit := 100
 
 	for worker := 0; worker < concurrencyLimit; worker++ {
@@ -140,7 +138,7 @@ func startWorker(wg *sync.WaitGroup, queue chan *feedreader.FeedItem, articleCha
 	}
 }
 
-func fillWorker(queue chan *feedreader.FeedItem, feeds []feedreader.Feed) {
+func (scraper *Scraper) fillWorker(queue chan *feedreader.FeedItem, feeds []feedreader.Feed) {
 	items := make([]*feedreader.FeedItem, 0)
 
 	for _, feed := range feeds {
@@ -154,7 +152,7 @@ func fillWorker(queue chan *feedreader.FeedItem, feeds []feedreader.Feed) {
 	}
 }
 
-func loadFeeds(path string) ([]feedreader.Feed, error) {
+func (scraper *Scraper) loadFeeds(path string) ([]feedreader.Feed, error) {
 	articlesFile, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err

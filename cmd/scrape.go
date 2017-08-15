@@ -55,7 +55,7 @@ var cmdScrape = &cobra.Command{
 
 func init() {
 	cmdScrape.Args = cobra.ExactArgs(1)
-	cmdScrape.PersistentFlags().StringVarP(&scrapeOutDir, "out", "o", "out/content/", "Directory where to store the scraped articles")
+	cmdScrape.PersistentFlags().StringVarP(&scrapeOutDir, "out", "o", "out/content/", "Directory to store fetched pages")
 	cmdScrape.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
 	cmdScrape.PersistentFlags().BoolVarP(&scrapeVerbose, "verbose", "v", false, "Verbose logging of scraper")
 	RootCmd.AddCommand(cmdScrape)
@@ -76,9 +76,7 @@ func getFeedsFilePath(itemsInputFile string, dayTime *time.Time) (string, error)
 		dayStr := dayTime.Format("2-1-2006")
 		path := filepath.Join(itemsInputFile, dayStr+".json")
 		_, err := os.Stat(path)
-		if err != nil {
-			return path, nil
-		}
+		return path, err
 	}
 
 	return itemsInputFile, nil

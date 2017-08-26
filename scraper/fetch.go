@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
+
+	goose "github.com/advancedlogic/GoOse"
 )
 
 // Fetch the content of an article from the web
@@ -25,7 +28,6 @@ func (article *Article) Fetch() error {
 	}
 
 	defer resp.Body.Close()
-
 	if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
 		return fmt.Errorf("Site returned status code %d", resp.StatusCode)
 	}
@@ -35,6 +37,27 @@ func (article *Article) Fetch() error {
 		return err
 	}
 
-	article.HTML = string(body)
+	contentType := resp.Header.Get("Content-Type")
+	charset := getCharsetFromContentType(contentType)
+	bodyUtf8 := goose.UTF8encode(string(body), charset)
+	article.HTML = bodyUtf8
 	return nil
+}
+
+func getCharsetFromContentType(cs string) string {
+	cs = strings.ToLower(strings.Replace(cs, " ", "", -1))
+	if strings.HasPrefix(cs, "text/html;charset=") {
+		cs = strings.TrimPrefix(cs, "text/html;charset=")
+	}
+	if strings.HasPrefix(cs, "text/xhtml;charset=") {
+		cs = strings.TrimPrefix(cs, "text/xhtml;charset=")
+	}
+	if strings.HasPrefix(cs, "application/xhtml+xml;charset=") {
+		cs = strings.TrimPrefix(cs, "application/xhtml+xml;charset=")
+	}
+	if strings.HasPrefix(cs, "text/html") {
+		cs = "utf-8"
+	}
+
+	return goose.NormaliseCharset(cs)
 }

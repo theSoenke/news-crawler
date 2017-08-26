@@ -23,11 +23,11 @@ type Feed struct {
 
 // FeedItem stores info of feed entry
 type FeedItem struct {
-	Title     string `json:"title"`
-	Content   string `json:"content"`
-	URL       string `json:"url"`
-	Published string `json:"published"`
-	GUID      string `json:"guid"`
+	Title     string    `json:"title"`
+	Content   string    `json:"content"`
+	URL       string    `json:"url"`
+	Published time.Time `json:"published"`
+	GUID      string    `json:"guid"`
 }
 
 type FeedReader struct {
@@ -136,7 +136,7 @@ func fetchFeed(url string, dayTime *time.Time) ([]*FeedItem, error) {
 			Title:     item.Title,
 			Content:   item.Content,
 			URL:       item.Link,
-			Published: item.Date.String(),
+			Published: item.Date,
 			GUID:      item.ID,
 		}
 

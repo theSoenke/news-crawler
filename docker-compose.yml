@@ -2,31 +2,36 @@ version: '2.1'
 services:
   crawler:
     build: .
-    container_name: crawler
     restart: on-failure
-    depends_on:
-      elasticsearch:
-        condition: service_started
+    networks:
+      - kibana
     environment:
       - ELASTIC_URL=http://elasticsearch:9200
       - ELASTIC_USER=elastic
       - ELASTIC_PASSWORD=changeme
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.4.3
-    environment:
-      - cluster.name=docker-cluster
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    mem_limit: 1g
+    image: elasticsearch:5.5.2-alpine
+    networks:
+      - kibana
     volumes:
-      - esdata:/usr/share/elasticsearch/data
+      - elasticsearch:/usr/share/elasticsearch/data
     ports:
-      - "9200:9200"
+      - 9200:9200
+    environment:
+      - http.cors.enabled=true
+
+  kibana:
+    image: kibana:5.5.2
+    networks:
+      - kibana
+    ports:
+      - 5601:5601
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
 
 volumes:
-  esdata:
+  elasticsearch:
+
+networks:
+  kibana:

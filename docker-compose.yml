@@ -20,6 +20,13 @@ services:
       - 9200:9200
     environment:
       - http.cors.enabled=true
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
 
   kibana:
     image: kibana:5.5.2

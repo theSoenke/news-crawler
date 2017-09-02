@@ -4,7 +4,9 @@ services:
     build: .
     restart: on-failure
     networks:
-      - kibana
+      - elasticsearch
+    volumes:
+      - ./out:/app/out
     environment:
       - ELASTIC_URL=http://elasticsearch:9200
       - ELASTIC_USER=elastic
@@ -13,7 +15,7 @@ services:
   elasticsearch:
     image: elasticsearch:5.5.2-alpine
     networks:
-      - kibana
+      - elasticsearch
     volumes:
       - elasticsearch:/usr/share/elasticsearch/data
     ports:
@@ -31,7 +33,7 @@ services:
   kibana:
     image: kibana:5.5.2
     networks:
-      - kibana
+      - elasticsearch
     ports:
       - 5601:5601
     environment:
@@ -41,4 +43,4 @@ volumes:
   elasticsearch:
 
 networks:
-  kibana:
+  elasticsearch:

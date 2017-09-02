@@ -1,18 +1,18 @@
 # news-crawler
 
-## Build
-    git clone https://github.com/thesoenke/news-crawler
-    cd news-crawler
-    make
+## Install
+1. Make sure [go](https://golang.org) is installed
+2. Run `go get github.com/thesoenke/news-crawler`
+3. `$GOPATH/bin` should be in your PATH or run directly `$GOPATH/bin/news-crawler`
 
 
 ## Run
-Download feeds provided in an input file
+Download feeds from a list
 
     news-crawler feeds data/feeds_de.txt
 
 
-Download articles scraped by the feed downloader
+Download articles found by the feed downloader and index them in Elasticsearch
 
     export ELASTIC_URL="http://localhost:9200"
     export ELASTIC_USER=elastic
@@ -20,15 +20,17 @@ Download articles scraped by the feed downloader
     news-crawler scrape out/feeds/26-6-2017.json
 
 
-## Run with Docker Compose
-Run crawler, Elasticsearch and Kibana
+## Docker Compose
+Docker Compose will start and setup the crawler, Elastisearch and Kibana automatically
 
     docker-compose up
 
-
-You might need to increase the virtual memory limit when Elasticsearch does not start
+You might need to increase the virtual memory limit when Elasticsearch exits
 
     sysctl -w vm.max_map_count=262144
 
+3 containers running when everything worked
+
 ## Using Kibana
-Open localhost:5061 and add an index mapping for the `news` index
+Open localhost:5061 and add an index mapping for the `news` index. \
+Warning: The scraper has to be run at least once before the `news` index exists

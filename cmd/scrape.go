@@ -25,8 +25,8 @@ var cmdScrape = &cobra.Command{
 			return err
 		}
 
-		dayTime := time.Now().In(location)
-		path, err := getFeedsFilePath(itemsInputFile, &dayTime)
+		yesterday := time.Now().In(location).AddDate(0, 0, -1)
+		path, err := getFeedsFilePath(itemsInputFile, &yesterday)
 		if err != nil {
 			return err
 		}
@@ -37,7 +37,7 @@ var cmdScrape = &cobra.Command{
 		}
 
 		start := time.Now()
-		err = contentScraper.Scrape(scrapeOutDir, &dayTime, scrapeVerbose)
+		err = contentScraper.Scrape(scrapeOutDir, &yesterday, scrapeVerbose)
 		if err != nil {
 			return err
 		}
@@ -55,7 +55,7 @@ func init() {
 	RootCmd.AddCommand(cmdScrape)
 }
 
-func getFeedsFilePath(itemsInputFile string, dayTime *time.Time) (string, error) {
+func getFeedsFilePath(itemsInputFile string, day *time.Time) (string, error) {
 	if itemsInputFile == "" {
 		return "", errors.New("Please provide a file with articles")
 	}
@@ -65,9 +65,10 @@ func getFeedsFilePath(itemsInputFile string, dayTime *time.Time) (string, error)
 		return "", err
 	}
 
-	// Append current day to path when only received directory as input location
+	// Use article list from yesterday as the input file
+	// This ensures that all articles for one day are included
 	if stat.IsDir() {
-		dayStr := dayTime.Format("2-1-2006")
+		dayStr := day.Format("2-1-2006")
 		path := filepath.Join(itemsInputFile, dayStr+".json")
 		_, err := os.Stat(path)
 		return path, err

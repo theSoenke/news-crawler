@@ -53,7 +53,7 @@ func New(feedsFile string) (Scraper, error) {
 func (scraper *Scraper) Scrape(outDir string, dayTime *time.Time, verbose bool) error {
 	wg := sync.WaitGroup{}
 	queue := make(chan *feedreader.FeedItem)
-	errChan := make(chan bool)
+	errChan := make(chan error)
 	articleChan := make(chan *Article)
 	numItems := 0
 	for _, feed := range scraper.Feeds {
@@ -89,7 +89,10 @@ func (scraper *Scraper) Scrape(outDir string, dayTime *time.Time, verbose bool) 
 				log.SetOutput(os.Stderr)
 				return err
 			}
-		case <-errChan:
+		case err := <-errChan:
+			if ferr, ok := err.(*FetchError); ok {
+				scraper.logError(ferr)
+			}
 			failures++
 		}
 		bar.Increment()
@@ -106,7 +109,7 @@ func (scraper *Scraper) Scrape(outDir string, dayTime *time.Time, verbose bool) 
 	return nil
 }
 
-func (scraper *Scraper) startWorker(wg *sync.WaitGroup, queue chan *feedreader.FeedItem, articleChan chan *Article, errChan chan bool, verbose bool) {
+func (scraper *Scraper) startWorker(wg *sync.WaitGroup, queue chan *feedreader.FeedItem, articleChan chan *Article, errChan chan error, verbose bool) {
 	concurrencyLimit := 100
 
 	for worker := 0; worker < concurrencyLimit; worker++ {
@@ -125,7 +128,7 @@ func (scraper *Scraper) startWorker(wg *sync.WaitGroup, queue chan *feedreader.F
 					if verbose {
 						fmt.Printf("Failed to fetch %s %s\n", item.URL, err)
 					}
-					errChan <- true
+					errChan <- err
 					continue
 				}
 
@@ -134,7 +137,7 @@ func (scraper *Scraper) startWorker(wg *sync.WaitGroup, queue chan *feedreader.F
 					if verbose {
 						fmt.Printf("Failed to extract %s %s\n", item.URL, err)
 					}
-					errChan <- true
+					errChan <- err
 					continue
 				}
 

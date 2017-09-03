@@ -10,6 +10,17 @@ import (
 	goose "github.com/advancedlogic/GoOse"
 )
 
+type FetchError struct {
+	Msg    string    `json:"message"`
+	URL    string    `json:"url"`
+	Status int       `json:"status"`
+	Time   time.Time `json:"time"`
+}
+
+func (e *FetchError) Error() string {
+	return fmt.Sprintf("%v %s", e.Time, e.Msg)
+}
+
 // Fetch the content of an article from the web
 func (article *Article) Fetch() error {
 	timeout := time.Duration(60 * time.Second)
@@ -24,12 +35,24 @@ func (article *Article) Fetch() error {
 	req.Header.Set("User-Agent", userAgent)
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		fetchErr := &FetchError{
+			Msg:    err.Error(),
+			URL:    article.FeedItem.URL,
+			Status: resp.StatusCode,
+			Time:   time.Now(),
+		}
+		return fetchErr
 	}
 
 	defer resp.Body.Close()
 	if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
-		return fmt.Errorf("Site returned status code %d", resp.StatusCode)
+		fetchErr := &FetchError{
+			Msg:    fmt.Sprintf("Server returned status code %d", resp.StatusCode),
+			URL:    article.FeedItem.URL,
+			Status: resp.StatusCode,
+			Time:   time.Now(),
+		}
+		return fetchErr
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)

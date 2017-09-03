@@ -31,6 +31,18 @@ func (scraper *Scraper) index(article *Article) error {
 	return err
 }
 
+// logError in elasticsearch
+func (scraper *Scraper) logError(fetchError *FetchError) error {
+	ctx := context.Background()
+	_, err := scraper.ElasticClient.Index().
+		Index("failures").
+		Type("failure").
+		BodyJson(fetchError).
+		Refresh("true").
+		Do(ctx)
+	return err
+}
+
 func (scraper *Scraper) createIndex() error {
 	ctx := context.Background()
 	exists, err := scraper.ElasticClient.IndexExists("news").Do(ctx)

@@ -1,5 +1,7 @@
 # news-crawler
 
+Uses a list of feeds to crawl and store all daily published news
+
 ## Install
 1. Make sure [go](https://golang.org) is installed
 2. Run `go get github.com/thesoenke/news-crawler`

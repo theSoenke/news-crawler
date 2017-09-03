@@ -56,7 +56,7 @@ var cmdFeeds = &cobra.Command{
 func init() {
 	cmdFeeds.Args = cobra.ExactArgs(1)
 	cmdFeeds.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
-	cmdFeeds.PersistentFlags().StringVarP(&feedOutDir, "out", "o", "out/feeds/", "Directory where to store the feed items")
+	cmdFeeds.PersistentFlags().StringVarP(&feedOutDir, "dir", "d", "out/feeds/", "Directory to store feed items")
 	cmdFeeds.PersistentFlags().BoolVarP(&feedsVerbose, "verbose", "v", false, "Output more detailed logging")
 	RootCmd.AddCommand(cmdFeeds)
 }

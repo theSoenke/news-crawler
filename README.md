@@ -34,5 +34,5 @@ You might need to increase the virtual memory limit when Elasticsearch exits
 3 containers running when everything worked
 
 ## Using Kibana
-Open localhost:5061 and add an index mapping for the `news` index. \
+Open localhost:5061 and add an index mapping for the `news` and `failures` index. \
 Warning: The scraper has to be run at least once before the `news` index exists

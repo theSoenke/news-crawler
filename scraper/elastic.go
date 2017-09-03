@@ -42,18 +42,3 @@ func (scraper *Scraper) logError(fetchError *FetchError) error {
 		Do(ctx)
 	return err
 }
-
-func (scraper *Scraper) createIndex() error {
-	ctx := context.Background()
-	exists, err := scraper.ElasticClient.IndexExists("news").Do(ctx)
-	if err != nil {
-		return err
-	}
-
-	if exists {
-		return nil
-	}
-
-	_, err = scraper.ElasticClient.CreateIndex("news").Do(ctx)
-	return err
-}

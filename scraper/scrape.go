@@ -65,11 +65,6 @@ func (scraper *Scraper) Scrape(outDir string, dayTime *time.Time, verbose bool) 
 		log.SetOutput(ioutil.Discard)
 	}
 
-	err := scraper.createIndex()
-	if err != nil {
-		return err
-	}
-
 	bar := pb.StartNew(numItems)
 	scraper.startWorker(&wg, queue, articleChan, errChan, verbose)
 	go scraper.fillWorker(queue, scraper.Feeds)

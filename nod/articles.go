@@ -5,24 +5,22 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/thesoenke/news-crawler/feedreader"
 	"github.com/thesoenke/news-crawler/scraper"
 	elastic "gopkg.in/olivere/elastic.v5"
 )
 
-func CreateNoDInput() error {
+func CreateNoDCorpus() error {
 	output, err := outputText()
 	if err != nil {
 		return err
 	}
 
 	fmt.Println(output)
-	return nil
-}
-
-func compressOutput(output string) {
-	// TODO
+	err = compressBz2(output, "data")
+	return err
 }
 
 func outputText() (string, error) {
@@ -30,7 +28,7 @@ func outputText() (string, error) {
 	to := "2017-09-30"
 	articles, err := loadArticles(from, to)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	tokennizer, err := NewSentenceTokenizer("german")
@@ -42,6 +40,10 @@ func outputText() (string, error) {
 	for _, article := range articles {
 		sentences := tokennizer.Tokenize(article.Content)
 		for _, s := range sentences {
+			text := strings.Join(strings.Fields(s.Text), " ")
+			if len(text) < 20 {
+				continue
+			}
 			output := fmt.Sprintf("%s\t%s\n", s.Text, article.URL)
 			buffer.WriteString(output)
 		}
@@ -71,7 +73,6 @@ func loadArticles(from string, to string) ([]feedreader.FeedItem, error) {
 	var feedItem feedreader.FeedItem
 	for _, item := range searchResult.Each(reflect.TypeOf(feedItem)) {
 		if article, ok := item.(feedreader.FeedItem); ok {
-			// fmt.Printf("Titel: %s\n", article.Title)
 			items = append(items, article)
 		}
 	}

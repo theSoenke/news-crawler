@@ -7,22 +7,29 @@ import (
 )
 
 func compressBz2(output string, filename string) error {
-	f, err := os.Create("out/nod/" + filename + ".bz2")
+	outDir := "out/nod/"
+	if _, err := os.Stat(outDir); os.IsNotExist(err) {
+		err := os.MkdirAll(outDir, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+	f, err := os.Create(outDir + filename + ".bz2")
 	if err != nil {
 		return err
 	}
 
-	bzWriter, err := bzip2.NewWriter(f, &bzip2.WriterConfig{Level: 2})
+	bz2, err := bzip2.NewWriter(f, &bzip2.WriterConfig{Level: 2})
 	if err != nil {
 		return err
 	}
 
-	_, err = bzWriter.Write([]byte(output))
+	_, err = bz2.Write([]byte(output))
 	if err != nil {
 		return err
 	}
 
-	defer bzWriter.Close()
+	defer bz2.Close()
 	if err != nil {
 		return err
 	}

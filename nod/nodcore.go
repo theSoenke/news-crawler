@@ -8,14 +8,22 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/neurosnap/sentences.v1"
+
 	"github.com/thesoenke/news-crawler/feedreader"
 	"github.com/thesoenke/news-crawler/scraper"
 	elastic "gopkg.in/olivere/elastic.v5"
 )
 
-func CreateNoDCorpus() error {
+// CreateCorpus creates input for NoDCore from an ElasticSearch instance
+func CreateCorpus(language string, dir string) error {
 	startDay := "02-08-2017" // TODO get day of first article from Elasticsearch
 	day, err := time.Parse("2-1-2006", startDay)
+	if err != nil {
+		return err
+	}
+
+	tokenizer, err := NewSentenceTokenizer(language)
 	if err != nil {
 		return err
 	}
@@ -26,12 +34,12 @@ func CreateNoDCorpus() error {
 			break
 		}
 
-		output, err := generateDayOutput(day)
+		output, err := generateDayOutput(day, tokenizer)
 		if err != nil {
 			return err
 		}
 
-		err = compressBz2(output, day.Format("20060102"))
+		err = compressBz2(output, dir, day.Format("20060102"))
 		if err != nil {
 			return err
 		}
@@ -40,7 +48,7 @@ func CreateNoDCorpus() error {
 	return nil
 }
 
-func generateDayOutput(day time.Time) (string, error) {
+func generateDayOutput(day time.Time, tokenizer sentences.SentenceTokenizer) (string, error) {
 	from := day.Format("2006-01-02")
 	to := day.AddDate(0, 0, 0).Format("2006-01-02")
 	articles, err := loadArticles(from, to)
@@ -48,14 +56,9 @@ func generateDayOutput(day time.Time) (string, error) {
 		return "", err
 	}
 
-	tokennizer, err := NewSentenceTokenizer("german")
-	if err != nil {
-		return "", err
-	}
-
 	var buffer bytes.Buffer
 	for _, article := range articles {
-		sentences := tokennizer.Tokenize(article.Content)
+		sentences := tokenizer.Tokenize(article.Content)
 		for _, s := range sentences {
 			text := strings.Join(strings.Fields(s.Text), " ")
 			if len(text) < 20 {

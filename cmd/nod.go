@@ -8,7 +8,7 @@ import (
 var cmdNoD = &cobra.Command{
 	Use: "nod",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		err := nod.CreateNoDCorpus()
+		err := nod.CreateCorpus("german", "out/nod")
 		return err
 	},
 }

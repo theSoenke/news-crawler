@@ -2,19 +2,21 @@ package nod
 
 import (
 	"os"
+	"path"
 
 	"github.com/dsnet/compress/bzip2"
 )
 
-func compressBz2(output string, filename string) error {
-	outDir := "out/nod/"
-	if _, err := os.Stat(outDir); os.IsNotExist(err) {
-		err := os.MkdirAll(outDir, os.ModePerm)
+func compressBz2(output string, dir string, filename string) error {
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err := os.MkdirAll(dir, os.ModePerm)
 		if err != nil {
 			return err
 		}
 	}
-	f, err := os.Create(outDir + filename + ".bz2")
+
+	file := path.Join(dir, filename+".bz2")
+	f, err := os.Create(file)
 	if err != nil {
 		return err
 	}

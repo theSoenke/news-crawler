@@ -7,7 +7,7 @@ import (
 	"github.com/dsnet/compress/bzip2"
 )
 
-func compressBz2(output string, dir string, filename string) error {
+func (corpus *dayCorpus) compress(output string, dir string, filename string) error {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err := os.MkdirAll(dir, os.ModePerm)
 		if err != nil {

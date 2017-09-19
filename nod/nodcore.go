@@ -70,7 +70,7 @@ func (corpus *dayCorpus) generate(tokenizer sentences.SentenceTokenizer) (string
 			if len(text) < 20 {
 				continue
 			}
-			output := fmt.Sprintf("%s\t%s\n", s.Text, article.URL)
+			output := fmt.Sprintf("%s\t%s\n", text, article.URL)
 			buffer.WriteString(output)
 		}
 	}

@@ -31,10 +31,6 @@ func (corpus *dayCorpus) compress(output string, dir string, filename string) er
 		return err
 	}
 
-	defer bz2.Close()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	err = bz2.Close()
+	return err
 }

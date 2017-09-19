@@ -1,0 +1,2 @@
+# Content extraction fails
+http://www.4investors.de/xml/stocks_to_watch.rss

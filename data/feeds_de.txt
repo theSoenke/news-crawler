@@ -61,7 +61,6 @@ https://web.de/feeds/rss/index.rss
 http://static.winfuture.de/feeds/WinFuture-News-rss2.0.xml
 http://www.deutschlandfunk.de/die-nachrichten.353.de.rss
 http://api.20min.ch/rss/view/1
-http://www.4investors.de/xml/stocks_to_watch.rss
 http://www.ad-hoc-news.de/rss/nachrichten.xml
 http://www.aerztezeitung.de/extras/rss/
 http://www.wn.de/rss/feed/wn_muenster

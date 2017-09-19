@@ -23,7 +23,7 @@ func NewElasticClient() (*elastic.Client, error) {
 func (scraper *Scraper) index(article *Article) error {
 	ctx := context.Background()
 	_, err := scraper.ElasticClient.Index().
-		Index("news").
+		Index("news-" + scraper.Lang).
 		Type("article").
 		BodyJson(article.FeedItem).
 		Refresh("true").

@@ -2,14 +2,12 @@ package cmd
 
 import (
 	"log"
+	"path"
 	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/thesoenke/news-crawler/feedreader"
 )
-
-var feedOutDir string
-var feedsVerbose bool
 
 var cmdFeeds = &cobra.Command{
 	Use:   "feeds",
@@ -28,7 +26,7 @@ var cmdFeeds = &cobra.Command{
 
 		dayTime := time.Now().In(location)
 		start := time.Now()
-		err = reader.Fetch(&dayTime, feedsVerbose)
+		err = reader.Fetch(&dayTime, verbose)
 		if err != nil {
 			return err
 		}
@@ -39,12 +37,13 @@ var cmdFeeds = &cobra.Command{
 		}
 		log.Printf("Feeds: %d successful, %d failures, %d items in %s", len(reader.Feeds), len(reader.FailedFeeds), items, time.Since(start))
 
-		err = reader.LogFailures(feedOutDir, &dayTime)
+		err = reader.LogFailures(outDir, &dayTime)
 		if err != nil {
 			return err
 		}
 
-		err = reader.Store(feedOutDir, &dayTime)
+		dir := path.Join(outDir, lang)
+		err = reader.Store(dir, &dayTime)
 		if err != nil {
 			return err
 		}
@@ -56,7 +55,7 @@ var cmdFeeds = &cobra.Command{
 func init() {
 	cmdFeeds.Args = cobra.ExactArgs(1)
 	cmdFeeds.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
-	cmdFeeds.PersistentFlags().StringVarP(&feedOutDir, "dir", "d", "out/feeds/", "Directory to store feed items")
-	cmdFeeds.PersistentFlags().BoolVarP(&feedsVerbose, "verbose", "v", false, "Output more detailed logging")
+	cmdFeeds.PersistentFlags().StringVarP(&outDir, "dir", "d", "out/feeds/", "Directory to store feed items")
+	cmdFeeds.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Output more detailed logging")
 	RootCmd.AddCommand(cmdFeeds)
 }

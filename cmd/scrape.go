@@ -4,15 +4,12 @@ import (
 	"errors"
 	"log"
 	"os"
-	"path/filepath"
+	"path"
 	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/thesoenke/news-crawler/scraper"
 )
-
-var scrapeOutDir string
-var scrapeVerbose bool
 
 var cmdScrape = &cobra.Command{
 	Use:   "scrape",
@@ -26,32 +23,36 @@ var cmdScrape = &cobra.Command{
 		}
 
 		yesterday := time.Now().In(location).AddDate(0, 0, -1)
-		path, err := getFeedsFilePath(itemsInputFile, &yesterday)
+		feedPath, err := getFeedsFilePath(itemsInputFile, &yesterday)
 		if err != nil {
 			return err
 		}
 
-		contentScraper, err := scraper.New(path)
+		contentScraper, err := scraper.New(feedPath)
 		if err != nil {
 			return err
 		}
 
+		contentScraper.Lang = lang
+		contentScraper.Verbose = verbose
 		start := time.Now()
-		err = contentScraper.Scrape(scrapeOutDir, &yesterday, scrapeVerbose)
+		dir := path.Join(outDir, lang)
+		err = contentScraper.Scrape(dir, &yesterday)
 		if err != nil {
 			return err
 		}
 
-		log.Printf("Articles: %d successful, %d failures in %s from %s", contentScraper.Articles-contentScraper.Failures, contentScraper.Failures, time.Since(start), path)
+		log.Printf("Articles: %d successful, %d failures in %s from %s", contentScraper.Articles-contentScraper.Failures, contentScraper.Failures, time.Since(start), feedPath)
 		return nil
 	},
 }
 
 func init() {
 	cmdScrape.Args = cobra.ExactArgs(1)
-	cmdScrape.PersistentFlags().StringVarP(&scrapeOutDir, "dir", "d", "out/content/", "Directory to store fetched pages")
+	cmdScrape.PersistentFlags().StringVarP(&outDir, "dir", "d", "out/content/", "Directory to store fetched pages")
+	cmdScrape.PersistentFlags().StringVarP(&lang, "lang", "l", "english", "Language of the content")
 	cmdScrape.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
-	cmdScrape.PersistentFlags().BoolVarP(&scrapeVerbose, "verbose", "v", false, "Verbose logging of scraper")
+	cmdScrape.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose logging of scraper")
 	RootCmd.AddCommand(cmdScrape)
 }
 
@@ -69,7 +70,7 @@ func getFeedsFilePath(itemsInputFile string, day *time.Time) (string, error) {
 	// This ensures that all articles for one day are included
 	if stat.IsDir() {
 		dayStr := day.Format("2-1-2006")
-		path := filepath.Join(itemsInputFile, dayStr+".json")
+		path := path.Join(itemsInputFile, dayStr+".json")
 		_, err := os.Stat(path)
 		return path, err
 	}

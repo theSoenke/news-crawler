@@ -35,10 +35,15 @@ func (article *Article) Fetch() error {
 	req.Header.Set("User-Agent", userAgent)
 	resp, err := client.Do(req)
 	if err != nil {
+		var status int
+		if resp != nil {
+			status = resp.StatusCode
+		}
+
 		fetchErr := &FetchError{
 			Msg:    err.Error(),
 			URL:    article.FeedItem.URL,
-			Status: resp.StatusCode,
+			Status: status,
 			Time:   time.Now(),
 		}
 		return fetchErr

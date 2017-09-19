@@ -21,9 +21,11 @@ const (
 
 type Scraper struct {
 	Feeds         []feedreader.Feed
+	Lang          string
 	Articles      int
 	Failures      int
 	ElasticClient *elastic.Client
+	Verbose       bool
 }
 
 type Article struct {
@@ -50,7 +52,7 @@ func New(feedsFile string) (Scraper, error) {
 }
 
 // Scrape downloads the content of the provide list of urls
-func (scraper *Scraper) Scrape(outDir string, dayTime *time.Time, verbose bool) error {
+func (scraper *Scraper) Scrape(outDir string, day *time.Time) error {
 	wg := sync.WaitGroup{}
 	queue := make(chan *feedreader.FeedItem)
 	errChan := make(chan error)
@@ -60,20 +62,20 @@ func (scraper *Scraper) Scrape(outDir string, dayTime *time.Time, verbose bool) 
 		numItems += len(feed.Items)
 	}
 
-	if !verbose {
+	if !scraper.Verbose {
 		// prevents "Unsolicited response" log messages from http package when encountering buggy webserver
 		log.SetOutput(ioutil.Discard)
 	}
 
 	bar := pb.StartNew(numItems)
-	scraper.startWorker(&wg, queue, articleChan, errChan, verbose)
+	scraper.startWorker(&wg, queue, articleChan, errChan)
 	go scraper.fillWorker(queue, scraper.Feeds)
 
 	failures := 0
 	for i := 0; i < numItems; i++ {
 		select {
 		case article := <-articleChan:
-			err := article.Write(outDir, dayTime)
+			err := article.Write(outDir, day)
 			if err != nil {
 				log.SetOutput(os.Stderr)
 				return err
@@ -104,7 +106,7 @@ func (scraper *Scraper) Scrape(outDir string, dayTime *time.Time, verbose bool) 
 	return nil
 }
 
-func (scraper *Scraper) startWorker(wg *sync.WaitGroup, queue chan *feedreader.FeedItem, articleChan chan *Article, errChan chan error, verbose bool) {
+func (scraper *Scraper) startWorker(wg *sync.WaitGroup, queue chan *feedreader.FeedItem, articleChan chan *Article, errChan chan error) {
 	concurrencyLimit := 100
 
 	for worker := 0; worker < concurrencyLimit; worker++ {
@@ -138,7 +140,7 @@ func (scraper *Scraper) startWorker(wg *sync.WaitGroup, queue chan *feedreader.F
 
 				articleChan <- article
 			}
-		}(verbose)
+		}(scraper.Verbose)
 	}
 }
 

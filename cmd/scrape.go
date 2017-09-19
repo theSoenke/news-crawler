@@ -11,6 +11,7 @@ import (
 	"github.com/thesoenke/news-crawler/scraper"
 )
 
+var scrapeOutDir string
 var cmdScrape = &cobra.Command{
 	Use:   "scrape",
 	Short: "Scrape all provided articles",
@@ -36,7 +37,7 @@ var cmdScrape = &cobra.Command{
 		contentScraper.Lang = lang
 		contentScraper.Verbose = verbose
 		start := time.Now()
-		dir := path.Join(outDir, lang)
+		dir := path.Join(scrapeOutDir, lang)
 		err = contentScraper.Scrape(dir, &yesterday)
 		if err != nil {
 			return err
@@ -49,7 +50,7 @@ var cmdScrape = &cobra.Command{
 
 func init() {
 	cmdScrape.Args = cobra.ExactArgs(1)
-	cmdScrape.PersistentFlags().StringVarP(&outDir, "dir", "d", "out/content/", "Directory to store fetched pages")
+	cmdScrape.PersistentFlags().StringVarP(&scrapeOutDir, "dir", "d", "out/content/", "Directory to store fetched pages")
 	cmdScrape.PersistentFlags().StringVarP(&lang, "lang", "l", "english", "Language of the content")
 	cmdScrape.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
 	cmdScrape.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose logging of scraper")

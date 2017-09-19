@@ -9,6 +9,7 @@ import (
 	"github.com/thesoenke/news-crawler/feedreader"
 )
 
+var feedsOutDir string
 var cmdFeeds = &cobra.Command{
 	Use:   "feeds",
 	Short: "Scrape all provided feeds",
@@ -37,12 +38,12 @@ var cmdFeeds = &cobra.Command{
 		}
 		log.Printf("Feeds: %d successful, %d failures, %d items in %s", len(reader.Feeds), len(reader.FailedFeeds), items, time.Since(start))
 
-		err = reader.LogFailures(outDir, &dayTime)
+		err = reader.LogFailures(feedsOutDir, &dayTime)
 		if err != nil {
 			return err
 		}
 
-		dir := path.Join(outDir, lang)
+		dir := path.Join(feedsOutDir, lang)
 		err = reader.Store(dir, &dayTime)
 		if err != nil {
 			return err
@@ -54,8 +55,9 @@ var cmdFeeds = &cobra.Command{
 
 func init() {
 	cmdFeeds.Args = cobra.ExactArgs(1)
+	cmdFeeds.PersistentFlags().StringVarP(&lang, "lang", "l", "english", "Language of the content")
 	cmdFeeds.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
-	cmdFeeds.PersistentFlags().StringVarP(&outDir, "dir", "d", "out/feeds/", "Directory to store feed items")
+	cmdFeeds.PersistentFlags().StringVarP(&feedsOutDir, "dir", "d", "out/feeds", "Directory to store feed items")
 	cmdFeeds.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Output more detailed logging")
 	RootCmd.AddCommand(cmdFeeds)
 }

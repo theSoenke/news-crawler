@@ -9,7 +9,6 @@ import (
 
 var timezone string
 var lang string
-var outDir string
 var verbose bool
 
 // RootCmd represents the base command when called without any subcommands

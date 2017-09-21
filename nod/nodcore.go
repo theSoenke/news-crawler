@@ -45,6 +45,10 @@ func CreateCorpus(language string, dir string) error {
 			return err
 		}
 
+		if output == "" {
+			continue
+		}
+
 		err = corpus.compress(output, dir, day.Format("20060102"))
 		if err != nil {
 			return err

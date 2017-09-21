@@ -11,6 +11,8 @@ services:
       - ELASTIC_URL=http://elasticsearch:9200
       - ELASTIC_USER=elastic
       - ELASTIC_PASSWORD=changeme
+      - CRAWLER_LANGUAGE=german
+      - CRAWLER_TIMEZONE=Europe/Berlin
 
   elasticsearch:
     image: elasticsearch:5.5.2-alpine
@@ -22,13 +24,6 @@ services:
       - 9200:9200
     environment:
       - http.cors.enabled=true
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    mem_limit: 1g
 
   kibana:
     image: kibana:5.5.2

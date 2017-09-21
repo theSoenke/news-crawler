@@ -71,7 +71,7 @@ func (corpus *dayCorpus) generate(tokenizer sentences.SentenceTokenizer) (string
 		sentences := tokenizer.Tokenize(article.Content)
 		for _, s := range sentences {
 			text := strings.Join(strings.Fields(s.Text), " ")
-			if len(text) < 20 {
+			if len(text) < 20 || len(text) > 256 {
 				continue
 			}
 			output := fmt.Sprintf("%s\t%s\n", text, article.URL)

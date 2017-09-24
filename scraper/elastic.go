@@ -2,16 +2,37 @@ package scraper
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	elastic "gopkg.in/olivere/elastic.v5"
 )
 
+const (
+	ElasticHost     = "http://localhost"
+	ElasticPort     = 9200
+	ElasticUser     = "elastic"
+	ElasticPassword = "changeme"
+)
+
 // NewElasticClient creates a new client to connect to an elasticsearch cluster
 func NewElasticClient() (*elastic.Client, error) {
-	elasticURL := elastic.SetURL(os.Getenv("ELASTIC_URL"))
-	auth := elastic.SetBasicAuth(os.Getenv("ELASTIC_USER"), os.Getenv("ELASTIC_PASSWORD"))
-	client, err := elastic.NewClient(elasticURL, auth)
+	url := os.Getenv("ELASTIC_URL")
+	user := os.Getenv("ELASTIC_USER")
+	password := os.Getenv("ELASTIC_PASSWORD")
+
+	if url == "" {
+		url = fmt.Sprintf("%s:%d", ElasticHost, ElasticPort)
+	}
+	if user == "" {
+		user = ElasticUser
+	}
+	if password == "" {
+		user = ElasticPassword
+	}
+
+	auth := elastic.SetBasicAuth(user, password)
+	client, err := elastic.NewClient(elastic.SetURL(url), auth)
 	if err != nil {
 		return nil, err
 	}

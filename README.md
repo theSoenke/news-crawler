@@ -5,7 +5,7 @@ Uses a list of feeds to crawl and store all daily published news.
 ## Docker Compose Setup
 1. `git clone github.com/thesoenke/news-crawler`
 2. `cd news-crawler`
-3. `docker-compose up`
+3. `docker-compose up --build`
 
 This will start the crawler, Elastisearch and Kibana. In case ElasticSearch is crashing you might need to increase the virtual memory limit for Elasticsearch
 
@@ -29,7 +29,7 @@ Download articles from a list of feeds
 #### Scraper
 The scraper downloads articles found by the feedreader and indexes them in Elasticsearch.
 
-    news-crawler scrape out/feeds/26-6-2017.json --lang german
+    news-crawler scrape out/feeds/german/26-6-2017.json --lang german
 
 An ElasticSearch instance needs to be running. Credentials can be set with the environment variables `ELASTIC_URL`, `ELASTIC_USER` and `ELASTIC_PASSWORD`. Defaults are url: `http://localhost:9200`, user: `elastic`, password: `changeme`
 

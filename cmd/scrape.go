@@ -16,15 +16,13 @@ var cmdScrape = &cobra.Command{
 	Use:   "scrape",
 	Short: "Scrape all provided articles",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		itemsInputFile := args[0]
-
 		location, err := time.LoadLocation(timezone)
 		if err != nil {
 			return err
 		}
 
 		yesterday := time.Now().In(location).AddDate(0, 0, -1)
-		feedPath, err := getFeedsFilePath(itemsInputFile, &yesterday)
+		feedPath, err := getFeedsFilePath(args[0], &yesterday)
 		if err != nil {
 			return err
 		}
@@ -51,18 +49,18 @@ var cmdScrape = &cobra.Command{
 func init() {
 	cmdScrape.Args = cobra.ExactArgs(1)
 	cmdScrape.PersistentFlags().StringVarP(&scrapeOutDir, "dir", "d", "out/content/", "Directory to store fetched pages")
-	cmdScrape.PersistentFlags().StringVarP(&lang, "lang", "l", "english", "Language of the content")
+	cmdScrape.PersistentFlags().StringVarP(&lang, "lang", "l", "", "Language of the content")
 	cmdScrape.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
 	cmdScrape.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose logging of scraper")
 	RootCmd.AddCommand(cmdScrape)
 }
 
-func getFeedsFilePath(itemsInputFile string, day *time.Time) (string, error) {
-	if itemsInputFile == "" {
-		return "", errors.New("Please provide a file with articles")
+func getFeedsFilePath(feedsPath string, day *time.Time) (string, error) {
+	if feedsPath == "" {
+		return "", errors.New("Please provide a file or directory with feed articles")
 	}
 
-	stat, err := os.Stat(itemsInputFile)
+	stat, err := os.Stat(feedsPath)
 	if err != nil {
 		return "", err
 	}
@@ -71,10 +69,10 @@ func getFeedsFilePath(itemsInputFile string, day *time.Time) (string, error) {
 	// This ensures that all articles for one day are included
 	if stat.IsDir() {
 		dayStr := day.Format("2-1-2006")
-		path := path.Join(itemsInputFile, dayStr+".json")
+		path := path.Join(feedsPath, dayStr+".json")
 		_, err := os.Stat(path)
 		return path, err
 	}
 
-	return itemsInputFile, nil
+	return feedsPath, nil
 }

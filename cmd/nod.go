@@ -19,6 +19,6 @@ var cmdNoD = &cobra.Command{
 
 func init() {
 	cmdNoD.PersistentFlags().StringVarP(&nodOutDir, "dir", "d", "out/nod", "Directory to store daily compressed text corpus")
-	cmdNoD.PersistentFlags().StringVarP(&lang, "lang", "l", "english", "Language of the content")
+	cmdNoD.PersistentFlags().StringVarP(&lang, "lang", "l", "", "Language of the content")
 	RootCmd.AddCommand(cmdNoD)
 }

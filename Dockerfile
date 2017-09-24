@@ -13,7 +13,7 @@ RUN go build -o /usr/local/bin/news-crawler
 
 RUN touch crontab.tmp \
     && echo '30 * * * * /usr/local/bin/news-crawler feeds /app/data/feeds_de.txt --timezone $CRAWLER_TIMEZONE --lang $CRAWLER_LANGUAGE --dir /app/out/feeds' > crontab.tmp \
-    && echo '0 2 * * * /usr/local/bin/news-crawler scrape /app/out/feeds --timezone $CRAWLER_TIMEZONE --lang $CRAWLER_LANGUAGE --dir /app/out/articles' >> crontab.tmp \
+    && echo '0 2 * * * /usr/local/bin/news-crawler scrape /app/out/feeds/$CRAWLER_LANGUAGE --timezone $CRAWLER_TIMEZONE --lang $CRAWLER_LANGUAGE --dir /app/out/articles' >> crontab.tmp \
     && crontab crontab.tmp \
     && rm -rf crontab.tmp
 

@@ -13,3 +13,6 @@ vet:
 
 build:
 	@go get ${PACKAGES}
+
+nod-docker:
+	@docker-compose exec crawler /usr/local/bin/news-crawler nod --lang german --dir /app/out/nod

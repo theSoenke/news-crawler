@@ -11,14 +11,16 @@ This will start the crawler, Elastisearch and Kibana. In case ElasticSearch is c
 
     sysctl -w vm.max_map_count=262144
 
-When everything worked 3 containers should be running
+When everything worked 3 containers should be running.
+
+It is also possible to generate the NoDCore input in docker by running `make nod-docker`. The output will be available in `out/nod/german`. This will only work when the docker-compose setup is already running.
 
 ## Local setup
 ### Install
 1. Make sure [go](https://golang.org) is installed
 2. `git clone github.com/thesoenke/news-crawler`
 3. `cd news-crawler && make`
-3. `$GOPATH/bin` should be in your PATH or run it directly with `$GOPATH/bin/news-crawler`
+3. `$GOPATH/bin` should be in your `PATH` or run it directly with `$GOPATH/bin/news-crawler`
 
 ### Run
 #### Feedreader

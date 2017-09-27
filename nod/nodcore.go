@@ -53,6 +53,8 @@ func CreateCorpus(language string, from string, dir string) error {
 		if err != nil {
 			return err
 		}
+
+		fmt.Println(day.Format("2006-01-02"))
 	}
 
 	return nil

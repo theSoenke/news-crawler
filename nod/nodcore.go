@@ -19,9 +19,8 @@ type dayCorpus struct {
 }
 
 // CreateCorpus creates input for NoDCore from an ElasticSearch instance
-func CreateCorpus(language string, dir string) error {
-	startDay := "02-08-2017" // TODO get day of first article from ElasticSearch
-	day, err := time.Parse("2-1-2006", startDay)
+func CreateCorpus(language string, from string, dir string) error {
+	day, err := time.Parse("2-1-2006", from)
 	if err != nil {
 		return err
 	}
@@ -31,9 +30,10 @@ func CreateCorpus(language string, dir string) error {
 		return err
 	}
 
+	day = day.AddDate(0, 0, -1)
 	for {
 		day = day.AddDate(0, 0, 1)
-		if time.Now().AddDate(0, 0, -1).Before(day) {
+		if time.Now().Before(day) {
 			break
 		}
 

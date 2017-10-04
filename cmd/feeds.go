@@ -36,7 +36,6 @@ var cmdFeeds = &cobra.Command{
 		for _, feed := range reader.Feeds {
 			items += len(feed.Items)
 		}
-		log.Printf("Feeds: %d successful, %d failures, %d items in %s", len(reader.Feeds), len(reader.FailedFeeds), items, time.Since(start))
 
 		err = reader.LogFailures(feedsOutDir, &dayTime)
 		if err != nil {
@@ -44,11 +43,12 @@ var cmdFeeds = &cobra.Command{
 		}
 
 		dir := path.Join(feedsOutDir, lang)
-		err = reader.Store(dir, &dayTime)
+		file, err := reader.Store(dir, &dayTime)
 		if err != nil {
 			return err
 		}
 
+		log.Printf("Feedreader\nSuccessful: %d\nFailures: %d\nArticles: %d\nTime: %s\nFile: %s\n", len(reader.Feeds), len(reader.FailedFeeds), items, time.Since(start), file)
 		return nil
 	},
 }

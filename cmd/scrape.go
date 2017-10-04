@@ -41,7 +41,7 @@ var cmdScrape = &cobra.Command{
 			return err
 		}
 
-		log.Printf("Articles: %d successful, %d failures in %s from %s", contentScraper.Articles-contentScraper.Failures, contentScraper.Failures, time.Since(start), feedPath)
+		log.Printf("Scraper\nArticles: %d\nFailures: %d\nTime: %s\nFile: %s\n", contentScraper.Articles-contentScraper.Failures, contentScraper.Failures, time.Since(start), feedPath)
 		return nil
 	},
 }

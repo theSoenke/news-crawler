@@ -10,11 +10,11 @@ import (
 )
 
 // Store all downloaded feeds into a JSON file
-func (fr *FeedReader) Store(outDir string, dayTime *time.Time) error {
+func (fr *FeedReader) Store(outDir string, dayTime *time.Time) (string, error) {
 	if _, err := os.Stat(outDir); os.IsNotExist(err) {
 		err := os.MkdirAll(outDir, os.ModePerm)
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
 
@@ -25,13 +25,13 @@ func (fr *FeedReader) Store(outDir string, dayTime *time.Time) error {
 	if _, err := os.Stat(feedFile); !os.IsNotExist(err) {
 		feedsFile, err := ioutil.ReadFile(feedFile)
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		var oldFeeds []Feed
 		err = json.Unmarshal(feedsFile, &oldFeeds)
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		feeds = merge(feeds, oldFeeds)
@@ -39,11 +39,11 @@ func (fr *FeedReader) Store(outDir string, dayTime *time.Time) error {
 
 	jsonFeeds, err := json.Marshal(feeds)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = ioutil.WriteFile(feedFile, jsonFeeds, 0644)
-	return err
+	return feedFile, err
 }
 
 // LogFailures stores all failed feed downloads

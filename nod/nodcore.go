@@ -19,13 +19,13 @@ type dayCorpus struct {
 }
 
 // CreateCorpus creates input for NoDCore from an ElasticSearch instance
-func CreateCorpus(language string, from string, dir string) error {
+func CreateCorpus(lang string, from string, dir string) error {
 	day, err := time.Parse("2-1-2006", from)
 	if err != nil {
 		return err
 	}
 
-	tokenizer, err := NewSentenceTokenizer(language)
+	tokenizer, err := NewSentenceTokenizer(lang)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func CreateCorpus(language string, from string, dir string) error {
 		corpus := dayCorpus{
 			Day: day,
 		}
-		output, err := corpus.generate(tokenizer)
+		output, err := corpus.generate(lang, tokenizer)
 		if err != nil {
 			return err
 		}
@@ -60,10 +60,10 @@ func CreateCorpus(language string, from string, dir string) error {
 	return nil
 }
 
-func (corpus *dayCorpus) generate(tokenizer sentences.SentenceTokenizer) (string, error) {
+func (corpus *dayCorpus) generate(lang string, tokenizer sentences.SentenceTokenizer) (string, error) {
 	from := corpus.Day.Format("2006-01-02")
 	to := corpus.Day.AddDate(0, 0, 0).Format("2006-01-02")
-	articles, err := loadArticles(from, to)
+	articles, err := loadArticles(lang, from, to)
 	if err != nil {
 		return "", err
 	}
@@ -84,7 +84,7 @@ func (corpus *dayCorpus) generate(tokenizer sentences.SentenceTokenizer) (string
 	return buffer.String(), nil
 }
 
-func loadArticles(from string, to string) ([]feedreader.FeedItem, error) {
+func loadArticles(lang string, from string, to string) ([]feedreader.FeedItem, error) {
 	client, err := scraper.NewElasticClient()
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func loadArticles(from string, to string) ([]feedreader.FeedItem, error) {
 
 	query := elastic.NewRangeQuery("published").From(from).To(to)
 	searchResult, err := client.Search().
-		Index("news").
+		Index("news-" + lang).
 		Query(query).
 		From(0).Size(10000).
 		Pretty(true).

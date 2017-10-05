@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"errors"
-	"log"
+	"fmt"
 	"os"
 	"path"
 	"time"
@@ -41,14 +41,17 @@ var cmdScrape = &cobra.Command{
 			return err
 		}
 
-		log.Printf("Scraper\nArticles: %d\nFailures: %d\nTime: %s\nFile: %s\n", contentScraper.Articles-contentScraper.Failures, contentScraper.Failures, time.Since(start), feedPath)
-		return nil
+		successLog := fmt.Sprintf("%s Scraper\nArticles: %d\nFailures: %d\nTime: %s\nFile: %s\n", time.Now(), contentScraper.Articles-contentScraper.Failures, contentScraper.Failures, time.Since(start), feedPath)
+		fmt.Println(successLog)
+		err = writeLog(logsDir, successLog)
+		return err
 	},
 }
 
 func init() {
 	cmdScrape.Args = cobra.ExactArgs(1)
 	cmdScrape.PersistentFlags().StringVarP(&scrapeOutDir, "dir", "d", "out/content/", "Directory to store fetched pages")
+	cmdScrape.PersistentFlags().StringVar(&logsDir, "logs", "out/log", "File to store logs")
 	cmdScrape.PersistentFlags().StringVarP(&lang, "lang", "l", "", "Language of the content")
 	cmdScrape.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
 	cmdScrape.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose logging of scraper")

@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"log"
+	"fmt"
 	"path"
 	"time"
 
@@ -48,8 +48,10 @@ var cmdFeeds = &cobra.Command{
 			return err
 		}
 
-		log.Printf("Feedreader\nSuccessful: %d\nFailures: %d\nArticles: %d\nTime: %s\nFile: %s\n", len(reader.Feeds), len(reader.FailedFeeds), items, time.Since(start), file)
-		return nil
+		successLog := fmt.Sprintf("%s Feedreader\nSuccessful: %d\nFailures: %d\nArticles: %d\nTime: %s\nFile: %s\n", time.Now(), len(reader.Feeds), len(reader.FailedFeeds), items, time.Since(start), file)
+		fmt.Println(successLog)
+		err = writeLog(logsDir, successLog)
+		return err
 	},
 }
 
@@ -58,6 +60,7 @@ func init() {
 	cmdFeeds.PersistentFlags().StringVarP(&lang, "lang", "l", "", "Language of the content")
 	cmdFeeds.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
 	cmdFeeds.PersistentFlags().StringVarP(&feedsOutDir, "dir", "d", "out/feeds", "Directory to store feed items")
+	cmdFeeds.PersistentFlags().StringVar(&logsDir, "logs", "out/log", "File to store logs")
 	cmdFeeds.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Output more detailed logging")
 	RootCmd.AddCommand(cmdFeeds)
 }

@@ -61,9 +61,8 @@ func CreateCorpus(lang string, from string, dir string) error {
 }
 
 func (corpus *dayCorpus) generate(lang string, tokenizer sentences.SentenceTokenizer) (string, error) {
-	from := corpus.Day.Format("2006-01-02")
-	to := corpus.Day.AddDate(0, 0, 0).Format("2006-01-02")
-	articles, err := loadArticles(lang, from, to)
+	day := corpus.Day.Format("2006-01-02")
+	articles, err := loadArticles(lang, day, day)
 	if err != nil {
 		return "", err
 	}

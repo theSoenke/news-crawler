@@ -30,22 +30,20 @@ func CreateCorpus(lang string, from string, dir string) error {
 		return err
 	}
 
-	day = day.AddDate(0, 0, -1)
 	for {
-		day = day.AddDate(0, 0, 1)
-		if time.Now().Before(day) {
+		today := time.Now().In(day.Location()).Truncate(time.Hour * 24)
+		if day.After(today) || day.Equal(today) {
 			break
 		}
 
-		corpus := dayCorpus{
-			Day: day,
-		}
+		corpus := dayCorpus{Day: day}
 		output, err := corpus.generate(lang, tokenizer)
 		if err != nil {
 			return err
 		}
 
 		if output == "" {
+			day = day.AddDate(0, 0, 1)
 			continue
 		}
 
@@ -55,6 +53,7 @@ func CreateCorpus(lang string, from string, dir string) error {
 		}
 
 		fmt.Println(day.Format("2006-01-02"))
+		day = day.AddDate(0, 0, 1)
 	}
 
 	return nil

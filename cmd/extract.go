@@ -58,7 +58,7 @@ func extractContent(inputDir string, outputDir string) error {
 			return err
 		}
 
-		content, err := scraper.ExtractContentGoOse("", string(file))
+		content, err := scraper.ExtractWithGoOse("", string(file))
 		if err != nil {
 			return err
 		}

@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"net/url"
 
-	"github.com/advancedlogic/GoOse"
 	"github.com/jlubawy/go-boilerpipe"
 	"github.com/jlubawy/go-boilerpipe/extractor"
+	goose "github.com/thesoenke/GoOse"
 )
 
 // Extract the content of an article
 func (article *Article) Extract() error {
-	content, err := ExtractContentGoOse(article.FeedItem.URL, article.HTML)
-	// content, err := ExtractContentBoilerpipe(article.FeedItem.URL, article.HTML)
+	content, err := ExtractWithGoOse(article.FeedItem.URL, article.HTML)
+	// content, err := ExtractWithBoilerpipe(article.FeedItem.URL, article.HTML)
 	if err != nil {
 		return err
 	}
@@ -21,7 +21,7 @@ func (article *Article) Extract() error {
 	return nil
 }
 
-func ExtractContentGoOse(url string, html string) (string, error) {
+func ExtractWithGoOse(url string, html string) (string, error) {
 	g := goose.New()
 	article, err := g.ExtractFromRawHTML(url, html)
 	if err != nil {
@@ -31,7 +31,7 @@ func ExtractContentGoOse(url string, html string) (string, error) {
 	return article.CleanedText, nil
 }
 
-func ExtractContentBoilerpipe(urlStr string, html string) (string, error) {
+func ExtractWithBoilerpipe(urlStr string, html string) (string, error) {
 	reader := bytes.NewReader([]byte(html))
 	url, err := url.Parse(urlStr)
 	if err != nil {

@@ -4,10 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
-
-	goose "github.com/advancedlogic/GoOse"
 )
 
 type FetchError struct {
@@ -65,27 +62,6 @@ func (article *Article) Fetch() error {
 		return err
 	}
 
-	contentType := resp.Header.Get("Content-Type")
-	charset := getCharsetFromContentType(contentType)
-	bodyUtf8 := goose.UTF8encode(string(body), charset)
-	article.HTML = bodyUtf8
+	article.HTML = string(body)
 	return nil
-}
-
-func getCharsetFromContentType(cs string) string {
-	cs = strings.ToLower(strings.Replace(cs, " ", "", -1))
-	if strings.HasPrefix(cs, "text/html;charset=") {
-		cs = strings.TrimPrefix(cs, "text/html;charset=")
-	}
-	if strings.HasPrefix(cs, "text/xhtml;charset=") {
-		cs = strings.TrimPrefix(cs, "text/xhtml;charset=")
-	}
-	if strings.HasPrefix(cs, "application/xhtml+xml;charset=") {
-		cs = strings.TrimPrefix(cs, "application/xhtml+xml;charset=")
-	}
-	if strings.HasPrefix(cs, "text/html") {
-		cs = "utf-8"
-	}
-
-	return goose.NormaliseCharset(cs)
 }

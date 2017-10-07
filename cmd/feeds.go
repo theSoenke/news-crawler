@@ -48,7 +48,7 @@ var cmdFeeds = &cobra.Command{
 			return err
 		}
 
-		successLog := fmt.Sprintf("%s Feedreader\nSuccessful: %d\nFailures: %d\nArticles: %d\nTime: %s\nFile: %s\n", time.Now(), len(reader.Feeds), len(reader.FailedFeeds), items, time.Since(start), file)
+		successLog := fmt.Sprintf("Feedreader %s\nSuccessful: %d\nFailures: %d\nArticles: %d\nTime: %s\nFile: %s\n\n", time.Now().In(location), len(reader.Feeds), len(reader.FailedFeeds), items, time.Since(start), file)
 		fmt.Println(successLog)
 		err = writeLog(logsDir, successLog)
 		return err

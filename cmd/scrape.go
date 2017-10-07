@@ -41,7 +41,7 @@ var cmdScrape = &cobra.Command{
 			return err
 		}
 
-		successLog := fmt.Sprintf("%s Scraper\nArticles: %d\nFailures: %d\nTime: %s\nFile: %s\n", time.Now(), contentScraper.Articles-contentScraper.Failures, contentScraper.Failures, time.Since(start), feedPath)
+		successLog := fmt.Sprintf("Scraper %s\nArticles: %d\nFailures: %d\nTime: %s\nFile: %s\n\n", time.Now().In(location), contentScraper.Articles-contentScraper.Failures, contentScraper.Failures, time.Since(start), feedPath)
 		fmt.Println(successLog)
 		err = writeLog(logsDir, successLog)
 		return err

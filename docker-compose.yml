@@ -11,6 +11,7 @@ services:
       - ELASTIC_URL=http://elasticsearch:9200
       - ELASTIC_USER=elastic
       - ELASTIC_PASSWORD=changeme
+      - CRAWLER_FEEDS_FILE=/app/data/feeds_de.txt
       - CRAWLER_LANGUAGE=german
       - CRAWLER_TIMEZONE=Europe/Berlin
 
@@ -22,8 +23,6 @@ services:
       - elasticsearch:/usr/share/elasticsearch/data
     ports:
       - 9200:9200
-    environment:
-      - http.cors.enabled=true
 
   kibana:
     image: kibana:5.5.2

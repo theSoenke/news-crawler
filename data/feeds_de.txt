@@ -147,3 +147,14 @@ http://www.moz.de/nc/service/weiteres/rss-feeds-auf-mozde/?type=578&tx_rsmretres
 http://www.moz.de/nc/service/weiteres/rss-feeds-auf-mozde/?type=578&tx_rsmretrescorss_pi1%5Bshow%5D=98
 http://www.moz.de/nc/service/weiteres/rss-feeds-auf-mozde/?type=578&tx_rsmretrescorss_pi1%5Bshow%5D=99
 http://www.digitalfernsehen.de/rss.1640.1001.html
+http://rss.focus.de/fol/XML/rss_folnews.xml
+http://www.pnn.de/rss.xml
+http://rss.kicker.de/news/aktuell
+http://www.ruhrnachrichten.de/?_XML=rss
+https://www.loomee-tv.de/feed
+http://www.motorsport-total.com/rss.xml
+https://www.motorsport-magazin.com/rss/alle-rennserien.xml
+http://www.sport1.de/news.rss
+https://www.blick.ch/news/rss
+https://www.nzz.ch/startseite.rss
+https://www.extremnews.com/feed

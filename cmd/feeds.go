@@ -37,12 +37,12 @@ var cmdFeeds = &cobra.Command{
 			items += len(feed.Items)
 		}
 
-		err = reader.LogFailures(feedsOutDir, &dayTime)
+		dir := path.Join(feedsOutDir, lang)
+		err = reader.LogFailures(dir, &dayTime)
 		if err != nil {
 			return err
 		}
 
-		dir := path.Join(feedsOutDir, lang)
 		file, err := reader.Store(dir, &dayTime)
 		if err != nil {
 			return err

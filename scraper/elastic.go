@@ -52,11 +52,11 @@ func (scraper *Scraper) index(article *Article) error {
 	return err
 }
 
-// logError in elasticsearch
+// logError in ElasticSearch
 func (scraper *Scraper) logError(fetchError *FetchError) error {
 	ctx := context.Background()
 	_, err := scraper.ElasticClient.Index().
-		Index("failures").
+		Index("failures-" + scraper.Lang).
 		Type("failure").
 		BodyJson(fetchError).
 		Refresh("true").

@@ -10,16 +10,16 @@ import (
 )
 
 // Store all downloaded feeds into a JSON file
-func (fr *FeedReader) Store(outDir string, dayTime *time.Time) (string, error) {
-	if _, err := os.Stat(outDir); os.IsNotExist(err) {
-		err := os.MkdirAll(outDir, os.ModePerm)
+func (fr *FeedReader) Store(dir string, dayTime *time.Time) (string, error) {
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err := os.MkdirAll(dir, os.ModePerm)
 		if err != nil {
 			return "", err
 		}
 	}
 
 	day := dayTime.Format("2-1-2006")
-	feedFile := filepath.Join(outDir, day+".json")
+	feedFile := filepath.Join(dir, day+".json")
 	feeds := fr.Feeds
 
 	if _, err := os.Stat(feedFile); !os.IsNotExist(err) {
@@ -48,15 +48,14 @@ func (fr *FeedReader) Store(outDir string, dayTime *time.Time) (string, error) {
 
 // LogFailures stores all failed feed downloads
 func (fr *FeedReader) LogFailures(dir string, dayTime *time.Time) error {
-	logDir := filepath.Join(dir, "log")
-	if _, err := os.Stat(logDir); os.IsNotExist(err) {
-		err := os.MkdirAll(logDir, os.ModePerm)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err := os.MkdirAll(dir, os.ModePerm)
 		if err != nil {
 			return err
 		}
 	}
 
-	filename := filepath.Join(logDir, "failed.txt")
+	filename := filepath.Join(dir, "failures.log")
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		return err

@@ -16,7 +16,7 @@ var cmdScrape = &cobra.Command{
 	Use:   "scrape",
 	Short: "Scrape all provided articles",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		location, err := time.LoadLocation(timezone)
+		location, err := time.LoadLocation(timeZone)
 		if err != nil {
 			return err
 		}
@@ -53,7 +53,7 @@ func init() {
 	cmdScrape.PersistentFlags().StringVarP(&scrapeOutDir, "dir", "d", "out/content/", "Directory to store fetched pages")
 	cmdScrape.PersistentFlags().StringVar(&logsDir, "logs", "out/log", "File to store logs")
 	cmdScrape.PersistentFlags().StringVarP(&lang, "lang", "l", "", "Language of the content")
-	cmdScrape.PersistentFlags().StringVarP(&timezone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
+	cmdScrape.PersistentFlags().StringVarP(&timeZone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
 	cmdScrape.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose logging of scraper")
 	RootCmd.AddCommand(cmdScrape)
 }

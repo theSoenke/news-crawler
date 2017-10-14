@@ -19,7 +19,7 @@ type dayCorpus struct {
 }
 
 // CreateCorpus creates input for NoDCore from an ElasticSearch instance
-func CreateCorpus(lang string, from string, dir string) error {
+func CreateCorpus(lang string, from string, timeZone string, dir string) error {
 	day, err := time.Parse("2-1-2006", from)
 	if err != nil {
 		return err
@@ -37,7 +37,7 @@ func CreateCorpus(lang string, from string, dir string) error {
 		}
 
 		corpus := dayCorpus{Day: day}
-		output, err := corpus.generate(lang, tokenizer)
+		output, err := corpus.generate(lang, timeZone, tokenizer)
 		if err != nil {
 			return err
 		}
@@ -59,9 +59,9 @@ func CreateCorpus(lang string, from string, dir string) error {
 	return nil
 }
 
-func (corpus *dayCorpus) generate(lang string, tokenizer sentences.SentenceTokenizer) (string, error) {
+func (corpus *dayCorpus) generate(lang string, timeZone string, tokenizer sentences.SentenceTokenizer) (string, error) {
 	day := corpus.Day.Format("2006-01-02")
-	articles, err := loadArticles(lang, day, day)
+	articles, err := loadArticles(lang, day, day, timeZone)
 	if err != nil {
 		return "", err
 	}
@@ -82,13 +82,17 @@ func (corpus *dayCorpus) generate(lang string, tokenizer sentences.SentenceToken
 	return buffer.String(), nil
 }
 
-func loadArticles(lang string, from string, to string) ([]feedreader.FeedItem, error) {
+func loadArticles(lang string, from string, to string, timeZone string) ([]feedreader.FeedItem, error) {
 	client, err := scraper.NewElasticClient()
 	if err != nil {
 		return nil, err
 	}
 
-	query := elastic.NewRangeQuery("published").From(from).To(to)
+	query := elastic.NewRangeQuery("published").
+		TimeZone(timeZone).
+		From(from).
+		To(to)
+
 	searchResult, err := client.Search().
 		Index("news-" + lang).
 		Query(query).

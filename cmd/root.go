@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var timezone string
+var timeZone string
 var lang string
 var verbose bool
 var logsDir string

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"path"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/thesoenke/news-crawler/nod"
@@ -13,6 +14,17 @@ var cmdNoD = &cobra.Command{
 	Use: "nod",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dir := path.Join(nodOutDir, lang)
+
+		if fromDate == "yesterday" {
+			location, err := time.LoadLocation(timeZone)
+			if err != nil {
+				return err
+			}
+
+			yesterday := time.Now().In(location).AddDate(0, 0, -1)
+			fromDate = yesterday.Format("2-1-2006")
+		}
+
 		err := nod.CreateCorpus(lang, fromDate, timeZone, dir)
 		return err
 	},

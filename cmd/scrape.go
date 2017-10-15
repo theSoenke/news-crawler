@@ -51,7 +51,7 @@ var cmdScrape = &cobra.Command{
 func init() {
 	cmdScrape.Args = cobra.ExactArgs(1)
 	cmdScrape.PersistentFlags().StringVarP(&scrapeOutDir, "dir", "d", "out/content/", "Directory to store fetched pages")
-	cmdScrape.PersistentFlags().StringVar(&logsDir, "logs", "out/log", "File to store logs")
+	cmdScrape.PersistentFlags().StringVar(&logsDir, "logs", "out/events.log", "File to store logs")
 	cmdScrape.PersistentFlags().StringVarP(&lang, "lang", "l", "", "Language of the content")
 	cmdScrape.PersistentFlags().StringVarP(&timeZone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
 	cmdScrape.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose logging of scraper")

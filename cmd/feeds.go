@@ -60,7 +60,7 @@ func init() {
 	cmdFeeds.PersistentFlags().StringVarP(&lang, "lang", "l", "", "Language of the content")
 	cmdFeeds.PersistentFlags().StringVarP(&timeZone, "timezone", "t", "Europe/Berlin", "Timezone for storing the feeds")
 	cmdFeeds.PersistentFlags().StringVarP(&feedsOutDir, "dir", "d", "out/feeds", "Directory to store feed items")
-	cmdFeeds.PersistentFlags().StringVar(&logsDir, "logs", "out/log", "File to store logs")
+	cmdFeeds.PersistentFlags().StringVar(&logsDir, "logs", "out/events.log", "File to store logs")
 	cmdFeeds.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Output more detailed logging")
 	RootCmd.AddCommand(cmdFeeds)
 }

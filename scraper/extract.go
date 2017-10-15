@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"net/url"
 
+	goose "github.com/advancedlogic/GoOse"
 	"github.com/jlubawy/go-boilerpipe"
 	"github.com/jlubawy/go-boilerpipe/extractor"
-	goose "github.com/thesoenke/GoOse"
 )
 
 // Extract the content of an article

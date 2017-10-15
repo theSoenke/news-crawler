@@ -87,7 +87,7 @@ http://feeds.gothamistllc.com/gothamist05
 https://timesofindia.indiatimes.com/rssfeedsdefault.cms
 http://feeds.marketwatch.com/marketwatch/topstories?format=xml
 http://abcnews.go.com/abcnews/topstories
-http://feeds.bbci.co.uk/news/rss.xml?edition=int
+http://feeds.bbci.co.uk/news/rss.xml
 http://rss.nytimes.com/services/xml/rss/nyt/World.xml
 http://www.npr.org/rss/rss.php?id=1001
 http://feeds.reuters.com/reuters/topNews?format=xml
@@ -101,9 +101,7 @@ http://feeds.washingtonpost.com/rss/homepage
 https://www.theguardian.com/uk/rss
 https://feeds.feedburner.com/DrudgeReportFeed
 http://feeds.marketwatch.com/marketwatch/topstories?f
-http://feeds.bbci.co.uk/news/rss.xml?edition=intormat=xml
 http://rss.nytimes.com/services/xml/rss/nyt/World.xml
-https://www.salon.com/feed
 https://www.newyorker.com/feed/everything
 https://www.theguardian.com/us-news/rss
 http://www.slate.com/articles/news_and_politics/politics.teaser.all.10.rss

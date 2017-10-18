@@ -19,7 +19,7 @@ It is also possible to generate the NoDCore input in docker by running `make nod
 Starts the crawler and [NoDWeb](https://github.com/uhh-lt/NoDWeb) and automatically runs [NoDCore](https://github.com/uhh-lt/NoDCore) when new data is available.
 1. `git clone github.com/thesoenke/news-crawler`
 2. `cd news-crawler`
-3. `docker-compose up --build`
+3. `docker-compose -f docker-compose.nod.yml up --build`
 4. Open [localhost:9000](localhost:9000)
 
 ## Local setup
@@ -48,7 +48,7 @@ An ElasticSearch instance needs to be running. Credentials can be set with the e
 Generated files can be found in `out/nod/<lang>` by default. This command will only work when the scraper has run at least once to insert data into ElasticSearch.
 
 ## Logs
-- Successful runs of the feedreader and scraper are logged with in `out/events.log`
+- Successful runs of the feedreader, scraper and nod exporter are logged with in `out/events.log`
 - The feedreader writes a log of feeds that could not be fetched to `out/feeds/<lang>/failures.log`
 - Articles that could not be fetched are logged in the ElasticSearch index `failures-<lang>`
 
@@ -56,7 +56,7 @@ Generated files can be found in `out/nod/<lang>` by default. This command will o
 When using the docker-compose setup open 4. Open [localhost:5601](localhost:5601) and add the index mapping. Index `news-*` will contain all languages. Language specific index mapping can be created by using `news-<lang>`. The index `failures-<lang>` logs all failures. \
 Warning: The scraper has to be run at least once to create the indices
 
-## Add a new language
+## Adding a new language
 Before a new language can be added a list of feeds is required. After that the 3 environment variables need to be change in `docker-compose.yml`
 - `CRAWLER_FEEDS_FILE` Path to a file with a list of feeds
 - `CRAWLER_LANGUAGE` Language of the parser

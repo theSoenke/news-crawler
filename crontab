@@ -1,0 +1,3 @@
+15 * * * * /usr/local/bin/news-crawler feeds $CRAWLER_FEEDS_FILE --lang $CRAWLER_LANGUAGE --dir /app/out/feeds --logs /app/out/events.log --timezone $CRAWLER_TIMEZONE
+20 * * * * /usr/local/bin/news-crawler scrape /app/out/feeds/$CRAWLER_LANGUAGE --lang $CRAWLER_LANGUAGE --dir /app/out/articles --logs /app/out/events.log --timezone $CRAWLER_TIMEZONE
+25 * * * * /usr/local/bin/news-crawler nod --from yesterday --lang $CRAWLER_LANGUAGE --dir /app/out/nod --logs /app/out/events.log --timezone $CRAWLER_TIMEZONE

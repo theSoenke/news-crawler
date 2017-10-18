@@ -1,4 +1,4 @@
-FROM golang:1.9.0-alpine
+FROM golang:1.9.1-alpine
 
 RUN apk update && apk upgrade
 RUN apk add git
@@ -10,11 +10,6 @@ COPY data /app/data
 WORKDIR /go/src/github.com/thesoenke/news-crawler
 RUN go get
 RUN go build -o /usr/local/bin/news-crawler
-
-RUN touch crontab.tmp \
-    && echo '30 * * * * /usr/local/bin/news-crawler feeds $CRAWLER_FEEDS_FILE --timezone $CRAWLER_TIMEZONE --lang $CRAWLER_LANGUAGE --dir /app/out/feeds  --logs /app/out/log' > crontab.tmp \
-    && echo '0 2 * * * /usr/local/bin/news-crawler scrape /app/out/feeds/$CRAWLER_LANGUAGE --timezone $CRAWLER_TIMEZONE --lang $CRAWLER_LANGUAGE --dir /app/out/articles --logs /app/out/log' >> crontab.tmp \
-    && crontab crontab.tmp \
-    && rm -rf crontab.tmp
+RUN crontab crontab
 
 CMD crond -l 5 -f

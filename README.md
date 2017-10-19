@@ -1,6 +1,6 @@
 # news-crawler
 
-Uses a list of feeds to crawl, extract content and store all daily published news.
+The news-crawler is crawling, storing and extracting content of daily published news articles based on a list of feeds as sources. The extracted content is indexed in ElasticSearch for further processing. This project also provide tooling to extract and preprocess the content for the [NoD](https://github.com/uhh-lt/NoDCore) project.
 
 ## Docker Compose
 1. `git clone github.com/thesoenke/news-crawler`

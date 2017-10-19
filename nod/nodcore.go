@@ -74,6 +74,7 @@ func (corpus *dayCorpus) generate(lang string, timeZone string, tokenizer senten
 			if len(text) < 20 || len(text) > 256 {
 				continue
 			}
+			text = strings.Replace(text, "|", " ", -1)
 			output := fmt.Sprintf("%s\t%s\n", text, article.URL)
 			buffer.WriteString(output)
 		}

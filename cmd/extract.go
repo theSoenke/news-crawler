@@ -12,7 +12,7 @@ import (
 
 var cmdExtract = &cobra.Command{
 	Use:   "extract",
-	Short: "Extract contents from HTML files in input dir",
+	Short: "Extract content from HTML files",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		inputDir := args[0]
 		outputDir := args[1]

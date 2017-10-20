@@ -12,7 +12,8 @@ import (
 var nodOutDir string
 var fromDate string
 var cmdNoD = &cobra.Command{
-	Use: "nod",
+	Use:   "nod",
+	Short: "Generate NoDCore input from ElasticSearch",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dir := path.Join(nodOutDir, lang)
 		location, err := time.LoadLocation(timeZone)

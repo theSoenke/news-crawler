@@ -14,7 +14,7 @@ import (
 var scrapeOutDir string
 var cmdScrape = &cobra.Command{
 	Use:   "scrape",
-	Short: "Scrape all provided articles",
+	Short: "Scrape content from provided URLs",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		location, err := time.LoadLocation(timeZone)
 		if err != nil {

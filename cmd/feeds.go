@@ -12,7 +12,7 @@ import (
 var feedsOutDir string
 var cmdFeeds = &cobra.Command{
 	Use:   "feeds",
-	Short: "Scrape all provided feeds",
+	Short: "Download items from a list of feeds",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		feedInputFile := args[0]
 		reader, err := feedreader.New(feedInputFile)

@@ -13,7 +13,7 @@ This will start the crawler, Elastisearch and Kibana. In case ElasticSearch is c
 
 When everything worked 3 containers should be running.
 
-It is also possible to generate the NoDCore input in docker by running `make nod-docker`. The output will be available in `out/nod/german`. This will only work when the docker-compose setup is already running and the scraper has run at least once.
+It is also possible to generate the NoDCore input in docker by running `make nod-docker`. It is also possible to only output the content of the day before by running `make nod-yesterday`. The output will be available in `out/nod/german`. This will only work when the docker-compose setup is already running and the scraper has run at least once.
 
 ## Docker Compose NoD
 Starts the crawler and [NoDWeb](https://github.com/uhh-lt/NoDWeb) and automatically runs [NoDCore](https://github.com/uhh-lt/NoDCore) when new data is available.

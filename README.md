@@ -1,6 +1,6 @@
 # news-crawler
 
-The news-crawler is crawling, storing and extracting content of daily published news articles based on a list of feeds as sources. The extracted content is indexed in ElasticSearch for further processing. This project also provide tooling to extract and preprocess the content for the [NoD](https://github.com/uhh-lt/NoDCore) project.
+This project is crawling, extracting, indexing and processing the content of daily published news articles. The extracted content is indexed in ElasticSearch for further processing. This project also provides tooling to extract and preprocess the content for the [NoD](https://github.com/uhh-lt/NoDCore) project.
 
 ## Docker Compose
 1. `git clone github.com/thesoenke/news-crawler`
@@ -46,6 +46,10 @@ An ElasticSearch instance needs to be running. Credentials can be set with the e
     newscrawler nod --lang german
 
 Generated files can be found in `out/nod/<lang>` by default. This command will only work when the scraper has run at least once to insert data into ElasticSearch.
+
+It is also possible to only output the content from yesterday with the following command:
+
+    news-crawler nod --from yesterday --lang german
 
 ## Logs
 - Successful runs of the feedreader, scraper and nod exporter are logged with in `out/events.log`

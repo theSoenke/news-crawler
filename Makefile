@@ -18,4 +18,4 @@ nod-docker:
 	@docker-compose exec crawler /usr/local/bin/news-crawler nod --lang german --dir /app/out/nod --logs /app/out/events.log --timezone Europe/Berlin
 
 nod-yesterday:
-	@docker-compose exec crawler /usr/local/bin/news-crawler nod --from yesterday --lang german --dir /app/out/nod --logs /app/out/events.log --timezone Europe/Berlin
+	@docker-compose run crawler /usr/local/bin/news-crawler nod --from yesterday --lang german --dir /app/out/nod --logs /app/out/events.log --timezone Europe/Berlin

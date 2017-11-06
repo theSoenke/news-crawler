@@ -56,6 +56,9 @@ It is also possible to only output the content from yesterday with the following
 - The feedreader writes a log of feeds that could not be fetched to `out/feeds/<lang>/failures.log`
 - Articles that could not be fetched are logged in the ElasticSearch index `failures-<lang>`
 
+## Archive
+All fetched webpages are by default stored on disk in `out/content/<lang>/<date>/<md5sum of the url>.html`
+
 ## Using Kibana
 When using the docker-compose setup open 4. Open [localhost:5601](localhost:5601) and add the index mapping. Index `news-*` will contain all languages. Language specific index mapping can be created by using `news-<lang>`. The index `failures-<lang>` logs all failures. \
 Warning: The scraper has to be run at least once to create the indices

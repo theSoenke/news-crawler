@@ -13,7 +13,7 @@ This will start the crawler, Elastisearch and Kibana. In case ElasticSearch is c
 
 When everything worked 3 containers should be running.
 
-It is also possible to generate the NoDCore input in docker by running `make nod-docker`. It is also possible to only output the content of the day before by running `make nod-yesterday`. The output will be available in `out/nod/german`. This will only work when the docker-compose setup is already running and the scraper has run at least once.
+It is also possible to generate the NoDCore input in docker by running `make nod-docker`. To generate only the data for the day before run `make nod-yesterday`. In case you want to run `make nod-yesterday` in a cronjob you have to provide the full path to docker-compose in the Makefile e.g. `/usr/local/bin/docker-compose`. The output will be available in `out/nod/german`. This will only work when the docker-compose setup is already running and the scraper has run at least once.
 
 ## Docker Compose NoD
 Starts the crawler and [NoDWeb](https://github.com/uhh-lt/NoDWeb) and automatically runs [NoDCore](https://github.com/uhh-lt/NoDCore) when new data is available.
@@ -55,6 +55,9 @@ It is also possible to only output the content from yesterday with the following
 - Successful runs of the feedreader, scraper and nod exporter are logged with in `out/events.log`
 - The feedreader writes a log of feeds that could not be fetched to `out/feeds/<lang>/failures.log`
 - Articles that could not be fetched are logged in the ElasticSearch index `failures-<lang>`
+
+## Archive
+All fetched webpages are by default stored on disk in `out/content/<lang>/<date>/<md5sum of the url>.html`
 
 ## Using Kibana
 When using the docker-compose setup open 4. Open [localhost:5601](localhost:5601) and add the index mapping. Index `news-*` will contain all languages. Language specific index mapping can be created by using `news-<lang>`. The index `failures-<lang>` logs all failures. \

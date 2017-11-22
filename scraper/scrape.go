@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	userAgent = "Mozilla/5.0 (X11; Linux x86_64; rv:53.0) Gecko/20100101 Firefox/53.0"
+	userAgent = "Mozilla/5.0 (X11; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0"
 )
 
 type Scraper struct {
@@ -68,7 +68,7 @@ func (scraper *Scraper) Scrape(outDir string, day *time.Time) error {
 	}
 
 	bar := pb.StartNew(numItems)
-	scraper.startWorker(&wg, queue, articleChan, errChan)
+	scraper.worker(&wg, queue, articleChan, errChan)
 	go scraper.fillWorker(queue, scraper.Feeds)
 
 	failures := 0
@@ -88,17 +88,22 @@ func (scraper *Scraper) Scrape(outDir string, day *time.Time) error {
 			}
 		case err := <-errChan:
 			if ferr, ok := err.(*FetchError); ok {
-				scraper.logError(ferr)
+				err = scraper.logError(ferr)
+				if err != nil {
+					log.SetOutput(os.Stderr)
+					return err
+				}
 			}
+
 			failures++
 		}
 		bar.Increment()
 	}
 
+	log.SetOutput(os.Stderr)
 	close(queue)
 	wg.Wait()
 	bar.Finish()
-	log.SetOutput(os.Stderr)
 
 	scraper.Articles = numItems
 	scraper.Failures = failures
@@ -106,41 +111,12 @@ func (scraper *Scraper) Scrape(outDir string, day *time.Time) error {
 	return nil
 }
 
-func (scraper *Scraper) startWorker(wg *sync.WaitGroup, queue chan *feedreader.FeedItem, articleChan chan *Article, errChan chan error) {
+func (scraper *Scraper) worker(wg *sync.WaitGroup, queue chan *feedreader.FeedItem, articleChan chan *Article, errChan chan error) {
 	concurrencyLimit := 100
 
 	for worker := 0; worker < concurrencyLimit; worker++ {
 		wg.Add(1)
-
-		go func(verbose bool) {
-			defer wg.Done()
-
-			for item := range queue {
-				article := &Article{
-					FeedItem: item,
-				}
-
-				err := article.Fetch()
-				if err != nil {
-					if verbose {
-						fmt.Printf("Failed to fetch %s %s\n", item.URL, err)
-					}
-					errChan <- err
-					continue
-				}
-
-				err = article.Extract()
-				if err != nil {
-					if verbose {
-						fmt.Printf("Failed to extract %s %s\n", item.URL, err)
-					}
-					errChan <- err
-					continue
-				}
-
-				articleChan <- article
-			}
-		}(scraper.Verbose)
+		go scraper.fetchItem(wg, queue, articleChan, errChan)
 	}
 }
 
@@ -153,6 +129,35 @@ func (scraper *Scraper) fillWorker(queue chan *feedreader.FeedItem, feeds []feed
 	shuffle(items)
 	for _, item := range items {
 		queue <- item
+	}
+}
+
+func (scraper *Scraper) fetchItem(wg *sync.WaitGroup, queue chan *feedreader.FeedItem, articleChan chan *Article, errChan chan error) {
+	defer wg.Done()
+	for item := range queue {
+		article := &Article{
+			FeedItem: item,
+		}
+
+		err := article.Fetch()
+		if err != nil {
+			if scraper.Verbose {
+				fmt.Printf("Failed to fetch %s %s\n", item.URL, err)
+			}
+			errChan <- err
+			continue
+		}
+
+		err = article.Extract()
+		if err != nil {
+			if scraper.Verbose {
+				fmt.Printf("Failed to extract %s %s\n", item.URL, err)
+			}
+			errChan <- err
+			continue
+		}
+
+		articleChan <- article
 	}
 }
 

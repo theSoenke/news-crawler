@@ -113,9 +113,9 @@ func (scraper *Scraper) Scrape(outDir string, day *time.Time) error {
 func (scraper *Scraper) worker(wg *sync.WaitGroup, queue chan *feedreader.FeedItem, articleChan chan *Article, errChan chan error) {
 	concurrencyLimit := 100
 
-	for worker := 0; worker < concurrencyLimit; worker++ {
+	for i := 0; i < concurrencyLimit; i++ {
 		wg.Add(1)
-		go scraper.fetchItem(wg, queue, articleChan, errChan)
+		go scraper.runWorker(wg, queue, articleChan, errChan)
 	}
 }
 
@@ -129,9 +129,11 @@ func (scraper *Scraper) fillWorker(queue chan *feedreader.FeedItem, feeds []feed
 	for _, item := range items {
 		queue <- item
 	}
+
+	close(queue)
 }
 
-func (scraper *Scraper) fetchItem(wg *sync.WaitGroup, queue chan *feedreader.FeedItem, articleChan chan *Article, errChan chan error) {
+func (scraper *Scraper) runWorker(wg *sync.WaitGroup, queue chan *feedreader.FeedItem, articleChan chan *Article, errChan chan error) {
 	defer wg.Done()
 	for item := range queue {
 		article := &Article{

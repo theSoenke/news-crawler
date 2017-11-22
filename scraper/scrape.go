@@ -100,9 +100,8 @@ func (scraper *Scraper) Scrape(outDir string, day *time.Time) error {
 		bar.Increment()
 	}
 
-	log.SetOutput(os.Stderr)
-	close(queue)
 	wg.Wait()
+	log.SetOutput(os.Stdout)
 	bar.Finish()
 
 	scraper.Articles = numItems

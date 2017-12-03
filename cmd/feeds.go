@@ -26,8 +26,10 @@ var cmdFeeds = &cobra.Command{
 		}
 
 		dayTime := time.Now().In(location)
+		reader.Day = &dayTime
+		reader.Verbose = verbose
 		start := time.Now()
-		err = reader.Fetch(&dayTime, verbose)
+		err = reader.Fetch()
 		if err != nil {
 			return err
 		}

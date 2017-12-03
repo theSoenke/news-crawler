@@ -119,7 +119,7 @@ func (scraper *Scraper) worker(wg *sync.WaitGroup, queue chan *feedreader.FeedIt
 	}
 }
 
-func (scraper *Scraper) fillWorker(queue chan *feedreader.FeedItem, feeds []feedreader.Feed) {
+func (*Scraper) fillWorker(queue chan *feedreader.FeedItem, feeds []feedreader.Feed) {
 	items := make([]*feedreader.FeedItem, 0)
 	for _, feed := range feeds {
 		items = append(items, feed.Items...)

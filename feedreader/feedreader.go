@@ -46,7 +46,7 @@ func New(feedsFile string) (FeedReader, error) {
 }
 
 // Fetch feed items
-func (fr *FeedReader) Fetch() error {
+func (fr *FeedReader) Fetch() {
 	wg := sync.WaitGroup{}
 	queue := make(chan string)
 	errURLChan := make(chan string)
@@ -72,8 +72,26 @@ func (fr *FeedReader) Fetch() error {
 
 	fr.Feeds = feeds
 	fr.FailedFeeds = failedFeeds
+}
 
-	return nil
+func (fr *FeedReader) FetchSerial() {
+	for _, url := range fr.Sources {
+		items, err := fr.fetchFeed(url)
+		if err != nil {
+			if fr.Verbose {
+				log.Printf("Failed to fetch feed %s %s", url, err)
+			}
+			fr.FailedFeeds = append(fr.FailedFeeds, url)
+			continue
+		}
+
+		feed := Feed{
+			URL:   url,
+			Items: items,
+		}
+
+		fr.Feeds = append(fr.Feeds, feed)
+	}
 }
 
 func (fr *FeedReader) createWorker(wg *sync.WaitGroup, queue chan string, feedChan chan *Feed, errURLChan chan string) {
@@ -94,7 +112,7 @@ func (fr *FeedReader) fillWorker(queue chan string) {
 func (fr *FeedReader) runWorker(wg *sync.WaitGroup, queue chan string, feedChan chan *Feed, errURLChan chan string) {
 	defer wg.Done()
 	for url := range queue {
-		items, err := fr.fetchFeed(url, fr.Day)
+		items, err := fr.fetchFeed(url)
 		if err != nil {
 			if fr.Verbose {
 				log.Printf("Failed to fetch feed %s %s", url, err)
@@ -126,13 +144,13 @@ func (*FeedReader) fetchFeedURL(url string) (*http.Response, error) {
 	return client.Do(req)
 }
 
-func (fr *FeedReader) fetchFeed(url string, dayTime *time.Time) ([]*FeedItem, error) {
+func (fr *FeedReader) fetchFeed(url string) ([]*FeedItem, error) {
 	feed, err := rss.FetchByFunc(fr.fetchFeedURL, url)
 	if err != nil {
 		return nil, err
 	}
 
-	day := dayTime.Format("2-1-2006")
+	day := fr.Day.Format("2-1-2006")
 	items := make([]*FeedItem, 0)
 	for _, item := range feed.Items {
 		// only accept feed items from today

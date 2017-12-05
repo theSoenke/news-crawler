@@ -34,6 +34,8 @@ type FeedReader struct {
 	Sources     []string
 	Feeds       []Feed
 	FailedFeeds []string
+	Day         *time.Time
+	Verbose     bool
 }
 
 // New creates a feedreader
@@ -44,8 +46,7 @@ func New(feedsFile string) (FeedReader, error) {
 }
 
 // Fetch feed items
-func (fr *FeedReader) Fetch(dayTime *time.Time, verbose bool) error {
-	concurrencyLimit := 100
+func (fr *FeedReader) Fetch() {
 	wg := sync.WaitGroup{}
 	queue := make(chan string)
 	errURLChan := make(chan string)
@@ -53,36 +54,8 @@ func (fr *FeedReader) Fetch(dayTime *time.Time, verbose bool) error {
 	count := len(fr.Sources)
 	bar := pb.StartNew(count)
 
-	for worker := 0; worker < concurrencyLimit; worker++ {
-		wg.Add(1)
-
-		go func(verbose bool) {
-			defer wg.Done()
-
-			for url := range queue {
-				items, err := fetchFeed(url, dayTime)
-				if err != nil {
-					if verbose {
-						log.Printf("Failed to fetch feed %s %s", url, err)
-					}
-					errURLChan <- url
-					continue
-				}
-
-				feed := Feed{
-					URL:   url,
-					Items: items,
-				}
-				feedChan <- &feed
-			}
-		}(verbose)
-	}
-
-	go func(feeds []string) {
-		for _, url := range feeds {
-			queue <- url
-		}
-	}(fr.Sources)
+	fr.createWorker(&wg, queue, feedChan, errURLChan)
+	go fr.fillWorker(queue)
 
 	feeds := make([]Feed, 0)
 	failedFeeds := make([]string, 0)
@@ -99,11 +72,64 @@ func (fr *FeedReader) Fetch(dayTime *time.Time, verbose bool) error {
 
 	fr.Feeds = feeds
 	fr.FailedFeeds = failedFeeds
-
-	return nil
 }
 
-func fetchFeedURL(url string) (*http.Response, error) {
+func (fr *FeedReader) FetchSerial() {
+	for _, url := range fr.Sources {
+		items, err := fr.fetchFeed(url)
+		if err != nil {
+			if fr.Verbose {
+				log.Printf("Failed to fetch feed %s %s", url, err)
+			}
+			fr.FailedFeeds = append(fr.FailedFeeds, url)
+			continue
+		}
+
+		feed := Feed{
+			URL:   url,
+			Items: items,
+		}
+
+		fr.Feeds = append(fr.Feeds, feed)
+	}
+}
+
+func (fr *FeedReader) createWorker(wg *sync.WaitGroup, queue chan string, feedChan chan *Feed, errURLChan chan string) {
+	concurrencyLimit := 100
+	for worker := 0; worker < concurrencyLimit; worker++ {
+		wg.Add(1)
+		go fr.runWorker(wg, queue, feedChan, errURLChan)
+	}
+}
+
+func (fr *FeedReader) fillWorker(queue chan string) {
+	for _, url := range fr.Sources {
+		queue <- url
+	}
+	close(queue)
+}
+
+func (fr *FeedReader) runWorker(wg *sync.WaitGroup, queue chan string, feedChan chan *Feed, errURLChan chan string) {
+	defer wg.Done()
+	for url := range queue {
+		items, err := fr.fetchFeed(url)
+		if err != nil {
+			if fr.Verbose {
+				log.Printf("Failed to fetch feed %s %s", url, err)
+			}
+			errURLChan <- url
+			continue
+		}
+
+		feed := Feed{
+			URL:   url,
+			Items: items,
+		}
+		feedChan <- &feed
+	}
+}
+
+func (*FeedReader) fetchFeedURL(url string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -118,13 +144,13 @@ func fetchFeedURL(url string) (*http.Response, error) {
 	return client.Do(req)
 }
 
-func fetchFeed(url string, dayTime *time.Time) ([]*FeedItem, error) {
-	feed, err := rss.FetchByFunc(fetchFeedURL, url)
+func (fr *FeedReader) fetchFeed(url string) ([]*FeedItem, error) {
+	feed, err := rss.FetchByFunc(fr.fetchFeedURL, url)
 	if err != nil {
 		return nil, err
 	}
 
-	day := dayTime.Format("2-1-2006")
+	day := fr.Day.Format("2-1-2006")
 	items := make([]*FeedItem, 0)
 	for _, item := range feed.Items {
 		// only accept feed items from today

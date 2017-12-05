@@ -26,12 +26,11 @@ var cmdFeeds = &cobra.Command{
 		}
 
 		dayTime := time.Now().In(location)
+		reader.Day = &dayTime
+		reader.Verbose = verbose
 		start := time.Now()
-		err = reader.Fetch(&dayTime, verbose)
-		if err != nil {
-			return err
-		}
-
+		// TODO Replace this again with reader.Fetch() when fixed possible deadlock
+		reader.FetchSerial()
 		items := 0
 		for _, feed := range reader.Feeds {
 			items += len(feed.Items)

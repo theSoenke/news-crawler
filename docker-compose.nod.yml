@@ -1,12 +1,16 @@
 version: '2.1'
+
+networks:
+  nod-newscrawler:
+
 services:
   crawler:
-    build: .
+    image: uhhlt/newscrawler
     restart: on-failure
     networks:
-      - elasticsearch
+      nod-newscrawler:
     volumes:
-      - ./out:/app/out
+      - ${PWD}/out:/app/out
     environment:
       - ELASTIC_URL=http://elasticsearch:9200
       - ELASTIC_USER=elastic
@@ -18,52 +22,59 @@ services:
   elasticsearch:
     image: elasticsearch:5.5.2-alpine
     networks:
-      - elasticsearch
+      nod-newscrawler:
     volumes:
-      - elasticsearch:/usr/share/elasticsearch/data
+      - ${PWD}/elasticsearch-data:/usr/share/elasticsearch/data
     ports:
       - 9200:9200
 
   kibana:
     image: kibana:5.5.2
     networks:
-      - elasticsearch
+      nod-newscrawler:
     ports:
       - 5601:5601
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
 
   nodcore:
-    image: thesoenke/nodcore
+    image: uhhlt/nodcore
     volumes:
-      - ./out/nod/german:/app/content
+      - ${PWD}/out/nod/german:/app/content
+    depends_on:
+          db:
+            condition: service_healthy
+    networks:
+      nod-newscrawler:
 
   nodweb:
-    image: thesoenke/nodweb
+    image: uhhlt/nodweb
     restart: always
     ports:
-      - 9000:9000
+      - 10008:9000
+    depends_on:
+          db:
+            condition: service_healthy
+    networks:
+      nod-newscrawler:
 
   db:
-    image: mariadb
-    volumes:
-      - "nod_data:/var/lib/mysql"
-    environment:
-       MYSQL_ROOT_PASSWORD: nod
-       MYSQL_DATABASE: nodcore
-       MYSQL_USER: nod
-       MYSQL_PASSWORD: nod
-    healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
-    ports:
-      - 3306:3306
+      image: mariadb
+      environment:
+        - MYSQL_RANDOM_ROOT_PASSWORD=yes
+        - MYSQL_DATABASE=nodcore
+        - MYSQL_USER=nod
+        - MYSQL_PORT=3306
+        - MYSQL_PASSWORD=nod
+      volumes:
+        - ${PWD}/nod-data/:/var/lib/mysql
+        - ./mycustom.cnf:/etc/mysql/conf.d/custom.cnf
+      command: ["--character-set-server=utf8", "--collation-server=utf8_bin"]
+      healthcheck:
+        test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-pnod", "-unod"]
+        interval: 20s
+        timeout: 10s
+        retries: 10
+      networks:
+        nod-newscrawler:
 
-
-volumes:
-  elasticsearch:
-  nod_data:
-
-networks:
-  elasticsearch:

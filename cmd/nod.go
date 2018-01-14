@@ -21,8 +21,11 @@ var cmdNoD = &cobra.Command{
 			return err
 		}
 
-		if fromDate == "yesterday" {
+		log := fmt.Sprintf("NoD exporter started %s\n", time.Now().In(location))
+		fmt.Println(log)
+		err = writeLog(logsDir, log)
 
+		if fromDate == "yesterday" {
 			yesterday := time.Now().In(location).AddDate(0, 0, -1)
 			fromDate = yesterday.Format("2-1-2006")
 		}
@@ -33,9 +36,9 @@ var cmdNoD = &cobra.Command{
 			return err
 		}
 
-		successLog := fmt.Sprintf("Nod %s\nTime: %s\n", time.Now().In(location), time.Since(start))
-		fmt.Println(successLog)
-		err = writeLog(logsDir, successLog)
+		log = fmt.Sprintf("Nod exporter finished %s\nTime: %s\n", time.Now().In(location), time.Since(start))
+		fmt.Println(log)
+		err = writeLog(logsDir, log)
 		return err
 	},
 }

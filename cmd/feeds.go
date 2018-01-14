@@ -25,6 +25,10 @@ var cmdFeeds = &cobra.Command{
 			return err
 		}
 
+		log := fmt.Sprintf("Feedreader started %s\n", time.Now().In(location))
+		fmt.Println(log)
+		err = writeLog(logsDir, log)
+
 		dayTime := time.Now().In(location)
 		reader.Day = &dayTime
 		reader.Verbose = verbose
@@ -47,9 +51,9 @@ var cmdFeeds = &cobra.Command{
 			return err
 		}
 
-		successLog := fmt.Sprintf("Feedreader %s\nSuccessful: %d\nFailures: %d\nArticles: %d\nTime: %s\nFile: %s\n", time.Now().In(location), len(reader.Feeds), len(reader.FailedFeeds), items, time.Since(start), file)
-		fmt.Println(successLog)
-		err = writeLog(logsDir, successLog)
+		log = fmt.Sprintf("Feedreader finished %s\nSuccessful: %d\nFailures: %d\nArticles: %d\nTime: %s\nFile: %s\n", time.Now().In(location), len(reader.Feeds), len(reader.FailedFeeds), items, time.Since(start), file)
+		fmt.Println(log)
+		err = writeLog(logsDir, log)
 		return err
 	},
 }

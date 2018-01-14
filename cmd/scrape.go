@@ -21,6 +21,10 @@ var cmdScrape = &cobra.Command{
 			return err
 		}
 
+		log := fmt.Sprintf("Scraper started %s\n", time.Now().In(location))
+		fmt.Println(log)
+		err = writeLog(logsDir, log)
+
 		yesterday := time.Now().In(location).AddDate(0, 0, -1)
 		feedPath, err := getFeedsFilePath(args[0], &yesterday)
 		if err != nil {
@@ -41,9 +45,9 @@ var cmdScrape = &cobra.Command{
 			return err
 		}
 
-		successLog := fmt.Sprintf("Scraper %s\nArticles: %d\nFailures: %d\nTime: %s\nFile: %s\n", time.Now().In(location), contentScraper.Articles-contentScraper.Failures, contentScraper.Failures, time.Since(start), feedPath)
-		fmt.Println(successLog)
-		err = writeLog(logsDir, successLog)
+		log = fmt.Sprintf("Scraper finished %s\nArticles: %d\nFailures: %d\nTime: %s\nFile: %s\n", time.Now().In(location), contentScraper.Articles-contentScraper.Failures, contentScraper.Failures, time.Since(start), feedPath)
+		fmt.Println(log)
+		err = writeLog(logsDir, log)
 		return err
 	},
 }

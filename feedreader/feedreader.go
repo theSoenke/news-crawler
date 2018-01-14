@@ -7,12 +7,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/SlyMarbo/rss"
+	"github.com/mmcdole/gofeed"
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
 const (
-	userAgent = "Mozilla/5.0 (X11; Linux x86_64; rv:53.0) Gecko/20100101 Firefox/53.0"
+	userAgent = "Mozilla/5.0 (X11; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0"
 )
 
 // Feed represent an RSS/Atom feed
@@ -129,23 +129,23 @@ func (fr *FeedReader) runWorker(wg *sync.WaitGroup, queue chan string, feedChan 
 	}
 }
 
-func (*FeedReader) fetchFeedURL(url string) (*http.Response, error) {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
+type UserAgentTransport struct {
+	http.RoundTripper
+}
 
-	req.Header.Set("User-Agent", userAgent)
-	timeout := time.Duration(30 * time.Second)
-	client := http.Client{
-		Timeout: timeout,
-	}
-
-	return client.Do(req)
+func (c *UserAgentTransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	r.Header.Set("User-Agent", userAgent)
+	return c.RoundTripper.RoundTrip(r)
 }
 
 func (fr *FeedReader) fetchFeed(url string) ([]*FeedItem, error) {
-	feed, err := rss.FetchByFunc(fr.fetchFeedURL, url)
+	client := http.Client{
+		Timeout:   time.Duration(20 * time.Second),
+		Transport: &UserAgentTransport{http.DefaultTransport},
+	}
+	fp := gofeed.NewParser()
+	fp.Client = &client
+	feed, err := fp.ParseURL(url)
 	if err != nil {
 		return nil, err
 	}
@@ -153,8 +153,12 @@ func (fr *FeedReader) fetchFeed(url string) ([]*FeedItem, error) {
 	day := fr.Day.Format("2-1-2006")
 	items := make([]*FeedItem, 0)
 	for _, item := range feed.Items {
+		if item.PublishedParsed == nil {
+			continue
+		}
+
 		// only accept feed items from today
-		if item.Date.Format("2-1-2006") != day {
+		if item.PublishedParsed.Format("2-1-2006") != day {
 			continue
 		}
 
@@ -162,11 +166,11 @@ func (fr *FeedReader) fetchFeed(url string) ([]*FeedItem, error) {
 			Title:     item.Title,
 			Content:   item.Content,
 			URL:       item.Link,
-			Published: item.Date,
-			GUID:      item.ID,
+			Published: *item.PublishedParsed,
+			GUID:      item.GUID,
 		}
 
-		err := newItem.validate()
+		err = newItem.validate()
 		if err != nil {
 			continue
 		}

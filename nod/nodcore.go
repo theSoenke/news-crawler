@@ -71,9 +71,10 @@ func (corpus *dayCorpus) generate(lang string, timeZone string, tokenizer senten
 		sentences := tokenizer.Tokenize(article.Content)
 		for _, s := range sentences {
 			text := strings.Join(strings.Fields(s.Text), " ")
-			if len(text) < 20 || len(text) > 256 {
+			if isBlacklisted(text) {
 				continue
 			}
+
 			text = strings.Replace(text, "|", " ", -1)
 			output := fmt.Sprintf("%s\t%s\n", text, article.URL)
 			buffer.WriteString(output)
@@ -81,6 +82,18 @@ func (corpus *dayCorpus) generate(lang string, timeZone string, tokenizer senten
 	}
 
 	return buffer.String(), nil
+}
+
+func isBlacklisted(sentence string) bool {
+	if len(sentence) < 20 || len(sentence) > 256 {
+		return true
+	}
+
+	if len(strings.Fields(sentence)) > 3 {
+		return true
+	}
+
+	return false
 }
 
 func loadArticles(lang string, from string, to string, timeZone string) ([]feedreader.FeedItem, error) {

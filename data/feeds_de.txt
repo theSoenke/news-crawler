@@ -199,3 +199,4 @@ http://www.faz.net/rss/aktuell
 https://www.rbb24.de/aktuell/index.xml/allitems=true/feed=rss
 https://deutsche-wirtschafts-nachrichten.de/feed
 https://www.neues-deutschland.de/rss/aktuell.php
+https://tarnkappe.info/feed/
